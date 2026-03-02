@@ -2,6 +2,10 @@ from django.urls import path
 
 from .views import (
     IndexView,
+    LabelCreateView,
+    LabelDeleteView,
+    LabelListView,
+    LabelUpdateView,
     StatusCreateView,
     StatusDeleteView,
     StatusListView,
@@ -22,10 +26,14 @@ urlpatterns = [
     path("users/<int:pk>/delete/", UserDeleteView.as_view(), name="user_delete"),
     path("login/", UserLoginView.as_view(), name="login"),
     path("logout/", UserLogoutView.as_view(), name="logout"),
-
     # Status URLs
     path("statuses/", StatusListView.as_view(), name="statuses"),
     path("statuses/create/", StatusCreateView.as_view(), name="status_create"),
     path("statuses/<int:pk>/update/", StatusUpdateView.as_view(), name="status_update"),
     path("statuses/<int:pk>/delete/", StatusDeleteView.as_view(), name="status_delete"),
+    # Label URLs
+    path("labels/", LabelListView.as_view(), name="labels"),
+    path("labels/create/", LabelCreateView.as_view(), name="label_create"),
+    path("labels/<int:pk>/update/", LabelUpdateView.as_view(), name="label_update"),
+    path("labels/<int:pk>/delete/", LabelDeleteView.as_view(), name="label_delete"),
 ]

@@ -4,11 +4,81 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
-from .models import Status
+from .models import Status, Label
 
 class IndexView(View):
     def get(self, request, *args, **kwargs):
         return render(request, "index.html")
+
+
+class LabelListView(LoginRequiredMixin, View):
+    login_url = "/login/"
+
+    def get(self, request, *args, **kwargs):
+        labels = Label.objects.all().order_by("id")
+        return render(request, "labels.html", {"labels": labels})
+
+
+class LabelCreateView(LoginRequiredMixin, View):
+    login_url = "/login/"
+
+    def get(self, request, *args, **kwargs):
+        return render(request, "label_create.html")
+
+    def post(self, request, *args, **kwargs):
+        name = request.POST.get("name")
+
+        if not name:
+            messages.error(request, "Имя метки обязательно")
+            return render(request, "label_create.html")
+
+        if Label.objects.filter(name=name).exists():
+            messages.error(request, "Метка с таким именем уже существует")
+            return render(request, "label_create.html")
+
+        Label.objects.create(name=name)
+        messages.success(request, "Метка успешно создана")
+        return redirect("/labels/")
+
+
+class LabelUpdateView(LoginRequiredMixin, View):
+    login_url = "/login/"
+
+    def get(self, request, pk, *args, **kwargs):
+        label = get_object_or_404(Label, pk=pk)
+        return render(request, "label_update.html", {"label": label})
+
+    def post(self, request, pk, *args, **kwargs):
+        label = get_object_or_404(Label, pk=pk)
+        name = request.POST.get("name")
+
+        if not name:
+            messages.error(request, "Имя метки обязательно")
+            return render(request, "label_update.html", {"label": label})
+
+        if name != label.name and Label.objects.filter(name=name).exists():
+            messages.error(request, "Метка с таким именем уже существует")
+            return render(request, "label_update.html", {"label": label})
+
+        label.name = name
+        label.save()
+
+        messages.success(request, "Метка успешно изменена")
+        return redirect("/labels/")
+
+
+class LabelDeleteView(LoginRequiredMixin, View):
+    login_url = "/login/"
+
+    def get(self, request, pk, *args, **kwargs):
+        label = get_object_or_404(Label, pk=pk)
+        return render(request, "label_delete.html", {"label": label})
+
+    def post(self, request, pk, *args, **kwargs):
+        label = get_object_or_404(Label, pk=pk)
+        label.delete()
+        messages.success(request, "Метка успешно удалена")
+        return redirect("/labels/")
 
 
 class StatusListView(LoginRequiredMixin, View):
