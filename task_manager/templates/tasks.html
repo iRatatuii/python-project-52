@@ -4,7 +4,7 @@
 <div class="container wrapper flex-grow-1">
     <h1 class="my-4">Задачи</h1>
 
-    <a class="btn btn-primary mb-3" href="/tasks/create/" role="button">Создать задачу</a>
+    <a class="btn btn-primary mb-3" href="{% url 'task_create' %}" role="button">Создать задачу</a>
 
     <div class="card mb-3">
         <div class="card-body bg-light">
@@ -65,7 +65,7 @@
             <tr>
                 <td>{{ task.id }}</td>
                 <td>
-                    <a href="/tasks/{{ task.id }}/">{{ task.name }}</a>
+                    <a href="{% url 'task_detail' task.id %}">{{ task.name }}</a>
                 </td>
                 <td>{{ task.status.name }}</td>
                 <td>{{ task.author.get_full_name|default:task.author.username }}</td>
@@ -73,9 +73,9 @@
                 </td>
                 <td>{{ task.created_at|date:"d.m.Y H:i" }}</td>
                 <td>
-                    <a href="/tasks/{{ task.id }}/update/">Изменить</a>
+                    <a href="{% url 'task_update' task.id %}">Изменить</a>
                     <br>
-                    <a href="/tasks/{{ task.id }}/delete/">Удалить</a>
+                    <a href="{% url 'task_delete' task.id %}">Удалить</a>
                 </td>
             </tr>
             {% endfor %}

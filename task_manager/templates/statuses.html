@@ -22,9 +22,9 @@
                 <td>{{ status.name }}</td>
                 <td>{{ status.created_at|date:"d.m.Y H:i" }}</td>
                 <td>
-                    <a href="/statuses/{{ status.id }}/update/">Изменить</a>
+                    <a href="{% url 'status_update' status.id %}">Изменить</a>
                     <br>
-                    <a href="/statuses/{{ status.id }}/delete/">Удалить</a>
+                    <a href="{% url 'status_delete' status.id %}">Удалить</a>
                 </td>
             </tr>
             {% endfor %}

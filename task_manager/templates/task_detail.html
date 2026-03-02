@@ -18,8 +18,7 @@
                 </div>
                 <div class="row p-1">
                     <div class="col">Исполнитель</div>
-                    <div class="col">{{ task.executor.get_full_name|default:task.executor.username|default:"Не назначен"
-                        }}</div>
+                    <div class="col">{{ task.executor.get_full_name|default:task.executor.username|default:"Не назначен"}}</div>
                 </div>
                 <div class="row p-1">
                     <div class="col">Статус</div>
@@ -43,9 +42,9 @@
                 </div>
                 <div class="row p-1">
                     <div class="col">
-                        <a href="/tasks/{{ task.id }}/update/">Изменить</a>
+                        <a href="{% url 'task_update' task.id %}">Изменить</a>
                         <br>
-                        <a href="/tasks/{{ task.id }}/delete/">Удалить</a>
+                        <a href="{% url 'task_delete' task.id %}">Удалить</a>
                     </div>
                 </div>
             </div>

@@ -13,25 +13,25 @@
 
 <body class="d-flex flex-column min-vh-100">
     <nav class="navbar navbar-expand-lg navbar-light bg-light ms-3">
-        <a class="navbar-brand" href="/">Менеджер задач</a>
+        <a class="navbar-brand" href="{% url 'index' %}">Менеджер задач</a>
         <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarToggleExternalContent">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarToggleExternalContent">
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="/users/">Пользователи</a>
+                    <a class="nav-link" href="{% url 'users' %}">Пользователи</a>
                 </li>
 
                 {% if user.is_authenticated %}
                 <li class="nav-item">
-                    <a class="nav-link" href="/statuses/">Статусы</a>
+                    <a class="nav-link" href="{% url 'statuses' %}">Статусы</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/labels/">Метки</a>
+                    <a class="nav-link" href="{% url 'labels' %}">Метки</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/tasks/">Задачи</a>
+                    <a class="nav-link" href="{% url 'tasks' %}">Задачи</a>
                 </li>
                 {% endif %}
             </ul>
@@ -39,17 +39,17 @@
             <ul class="navbar-nav">
                 {% if user.is_authenticated %}
                 <li class="nav-item">
-                    <form action="/logout/" method="post">
+                    <form action="{% url 'logout' %}" method="post">
                         {% csrf_token %}
                         <input class="btn nav-link" type="submit" value="Выход">
                     </form>
                 </li>
                 {% else %}
                 <li class="nav-item">
-                    <a class="nav-link" href="/login/">Вход</a>
+                    <a class="nav-link" href="{% url 'login' %}">Вход</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/users/create/">Регистрация</a>
+                    <a class="nav-link" href="{% url 'user_create' %}">Регистрация</a>
                 </li>
                 {% endif %}
             </ul>
