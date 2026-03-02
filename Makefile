@@ -25,6 +25,8 @@ build:
 create-admin:
 	python manage.py createsuperuser
 
+collectstatic:
+	uv run python manage.py collectstatic --noinput
 
 test:
 	uv run pytest --ds=hexlet_code.settings --reuse-db
