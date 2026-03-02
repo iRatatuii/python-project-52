@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Status, Label, Task
+
+from .models import Label, Status, Task
 
 
 @admin.register(Status)
@@ -27,7 +28,10 @@ class TaskAdmin(admin.ModelAdmin):
     filter_horizontal = ("labels",)  # Удобный виджет для выбора меток
     readonly_fields = ("created_at",)
     fieldsets = (
-        ("Основная информация", {"fields": ("name", "description", "created_at")}),
+        (
+            "Основная информация",
+            {"fields": ("name", "description", "created_at")},
+        ),
         ("Связи", {"fields": ("status", "author", "executor", "labels")}),
     )
     ordering = ("-created_at",)

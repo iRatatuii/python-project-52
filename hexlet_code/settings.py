@@ -76,6 +76,7 @@ WSGI_APPLICATION = 'hexlet_code.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 import dj_database_url
+
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:

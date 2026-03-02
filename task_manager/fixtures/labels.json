@@ -1,0 +1,26 @@
+[
+    {
+        "model": "task_manager.label",
+        "pk": 1,
+        "fields": {
+            "name": "Bug",
+            "created_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "task_manager.label",
+        "pk": 2,
+        "fields": {
+            "name": "Feature",
+            "created_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "task_manager.label",
+        "pk": 3,
+        "fields": {
+            "name": "Documentation",
+            "created_at": "2024-01-01T10:00:00Z"
+        }
+    }
+]

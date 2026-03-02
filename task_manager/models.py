@@ -7,8 +7,11 @@ NAME_VERBOSE = "Имя"
 STATUS_VERBOSE = "Статус"
 LABELS_VERBOSE = "Метки"
 
+
 class Status(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name=NAME_VERBOSE)
+    name = models.CharField(
+        max_length=100, unique=True, verbose_name=NAME_VERBOSE
+    )
     created_at = models.DateTimeField(
         default=timezone.now, verbose_name=CREATED_AT_VERBOSE
     )
@@ -22,7 +25,9 @@ class Status(models.Model):
 
 
 class Label(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name=NAME_VERBOSE)
+    name = models.CharField(
+        max_length=100, unique=True, verbose_name=NAME_VERBOSE
+    )
     created_at = models.DateTimeField(
         default=timezone.now, verbose_name=CREATED_AT_VERBOSE
     )
