@@ -7,6 +7,51 @@ from django.views import View
 
 from .models import Label, Status, Task
 
+# URL константы
+LOGIN_URL = "/login/"
+LOGOUT_URL = "/logout/"
+TASKS_URL = "/tasks/"
+USERS_URL = "/users/"
+STATUSES_URL = "/statuses/"
+LABELS_URL = "/labels/"
+
+# Сообщения об ошибках
+ERROR_NO_RIGHTS = "У вас нет прав для редактирования этого пользователя"
+ERROR_CANNOT_DELETE_USER = (
+    "Невозможно удалить пользователя, потому что он связан с задачами"
+)
+ERROR_CANNOT_DELETE_STATUS = (
+    "Невозможно удалить статус, потому что он используется в задачах"
+)
+ERROR_CANNOT_DELETE_LABEL = (
+    "Невозможно удалить метку, потому что она используется в задачах"
+)
+ERROR_TASK_DELETE_RIGHTS = "Задачу может удалить только её автор"
+ERROR_TASK_EDIT_RIGHTS = "Задачу может редактировать только её автор"
+ERROR_INVALID_CREDENTIALS = "Неверное имя пользователя или пароль"
+
+ERROR_STATUS_REQUIRED = "Статус обязателен"
+ERROR_PASSWORD_MISMATCH = "Пароли не совпадают"
+ERROR_PASSWORD_SHORT = "Пароль должен содержать минимум 3 символа"
+ERROR_USERNAME_EXISTS = "Пользователь с таким именем уже существует"
+ERROR_STATUS_EXISTS = "Статус с таким именем уже существует"
+ERROR_LABEL_EXISTS = "Метка с таким именем уже существует"
+
+# Сообщения об успехе
+SUCCESS_LOGIN = "Вы успешно вошли в систему"
+SUCCESS_LOGOUT = "Вы успешно вышли из системы"
+SUCCESS_USER_UPDATED = "Пользователь успешно обновлен"
+SUCCESS_USER_DELETED = "Пользователь успешно удален"
+SUCCESS_STATUS_CREATED = "Статус успешно создан"
+SUCCESS_STATUS_UPDATED = "Статус успешно изменен"
+SUCCESS_STATUS_DELETED = "Статус успешно удален"
+SUCCESS_LABEL_CREATED = "Метка успешно создана"
+SUCCESS_LABEL_UPDATED = "Метка успешно изменена"
+SUCCESS_LABEL_DELETED = "Метка успешно удалена"
+SUCCESS_TASK_CREATED = "Задача успешно создана"
+SUCCESS_TASK_UPDATED = "Задача успешно изменена"
+SUCCESS_TASK_DELETED = "Задача успешно удалена"
+
 
 class IndexView(View):
     def get(self, request, *args, **kwargs):
@@ -14,8 +59,6 @@ class IndexView(View):
 
 
 class TaskListView(LoginRequiredMixin, View):
-    login_url = "/login/"
-
     def get(self, request, *args, **kwargs):
         tasks = (
             Task.objects.all()
@@ -23,7 +66,6 @@ class TaskListView(LoginRequiredMixin, View):
             .prefetch_related("labels")
         )
 
-        # Фильтрация
         status_id = request.GET.get("status")
         executor_id = request.GET.get("executor")
         label_id = request.GET.get("label")
@@ -55,8 +97,6 @@ class TaskListView(LoginRequiredMixin, View):
 
 
 class TaskDetailView(LoginRequiredMixin, View):
-    login_url = "/login/"
-
     def get(self, request, pk, *args, **kwargs):
         task = get_object_or_404(
             Task.objects.select_related(
@@ -68,8 +108,6 @@ class TaskDetailView(LoginRequiredMixin, View):
 
 
 class TaskCreateView(LoginRequiredMixin, View):
-    login_url = "/login/"
-
     def get(self, request, *args, **kwargs):
         statuses = Status.objects.all()
         users = User.objects.all()
@@ -89,21 +127,19 @@ class TaskCreateView(LoginRequiredMixin, View):
         executor_id = request.POST.get("executor")
         label_ids = request.POST.getlist("labels")
 
-        # Валидация
         errors = []
 
         if not name:
             errors.append("Название задачи обязательно")
 
         if not status_id:
-            errors.append("Статус обязателен")
+            errors.append(ERROR_STATUS_REQUIRED)
 
         if errors:
             for error in errors:
                 messages.error(request, error)
             return redirect("/tasks/create/")
 
-        # Создание задачи
         task = Task.objects.create(
             name=name,
             description=description,
@@ -112,22 +148,19 @@ class TaskCreateView(LoginRequiredMixin, View):
             executor_id=executor_id if executor_id else None,
         )
 
-        # Добавление меток
         if label_ids:
             task.labels.set(label_ids)
 
-        messages.success(request, "Задача успешно создана")
+        messages.success(request, SUCCESS_TASK_CREATED)
         return redirect("/tasks/")
 
 
 class TaskUpdateView(LoginRequiredMixin, View):
-    login_url = "/login/"
-
     def get(self, request, pk, *args, **kwargs):
         task = get_object_or_404(Task, pk=pk)
 
         if not request.user.is_superuser and task.author != request.user:
-            messages.error(request, "Задачу может редактировать только её автор")
+            messages.error(request, ERROR_TASK_EDIT_RIGHTS)
             return redirect("/tasks/")
 
         statuses = Status.objects.all()
@@ -146,51 +179,46 @@ class TaskUpdateView(LoginRequiredMixin, View):
         task = get_object_or_404(Task, pk=pk)
 
         if not request.user.is_superuser and task.author != request.user:
-            messages.error(request, "Задачу может редактировать только её автор")
+            messages.error(request, ERROR_TASK_EDIT_RIGHTS)
             return redirect("/tasks/")
-        
+
         name = request.POST.get("name")
         description = request.POST.get("description", "")
         status_id = request.POST.get("status")
         executor_id = request.POST.get("executor")
         label_ids = request.POST.getlist("labels")
 
-        # Валидация
         errors = []
 
         if not name:
             errors.append("Название задачи обязательно")
 
         if not status_id:
-            errors.append("Статус обязателен")
+            errors.append(ERROR_STATUS_REQUIRED)
 
         if errors:
             for error in errors:
                 messages.error(request, error)
             return redirect(f"/tasks/{pk}/update/")
 
-        # Обновление задачи
         task.name = name
         task.description = description
         task.status_id = status_id
         task.executor_id = executor_id if executor_id else None
         task.save()
 
-        # Обновление меток
         task.labels.set(label_ids)
 
-        messages.success(request, "Задача успешно изменена")
+        messages.success(request, SUCCESS_TASK_UPDATED)
         return redirect("/tasks/")
 
 
 class TaskDeleteView(LoginRequiredMixin, View):
-    login_url = "/login/"
-
     def get(self, request, pk, *args, **kwargs):
         task = get_object_or_404(Task, pk=pk)
 
         if not request.user.is_superuser and task.author != request.user:
-            messages.error(request, "Задачу может удалить только её автор")
+            messages.error(request, ERROR_TASK_DELETE_RIGHTS)
             return redirect("/tasks/")
 
         return render(request, "task_delete.html", {"task": task})
@@ -199,24 +227,20 @@ class TaskDeleteView(LoginRequiredMixin, View):
         task = get_object_or_404(Task, pk=pk)
 
         if not request.user.is_superuser and task.author != request.user:
-            messages.error(request, "Задачу может удалить только её автор")
+            messages.error(request, ERROR_TASK_DELETE_RIGHTS)
             return redirect("/tasks/")
         task.delete()
-        messages.success(request, "Задача успешно удалена")
+        messages.success(request, SUCCESS_TASK_DELETED)
         return redirect("/tasks/")
 
 
 class LabelListView(LoginRequiredMixin, View):
-    login_url = "/login/"
-
     def get(self, request, *args, **kwargs):
         labels = Label.objects.all().order_by("id")
         return render(request, "labels.html", {"labels": labels})
 
 
 class LabelCreateView(LoginRequiredMixin, View):
-    login_url = "/login/"
-
     def get(self, request, *args, **kwargs):
         return render(request, "label_create.html")
 
@@ -228,17 +252,15 @@ class LabelCreateView(LoginRequiredMixin, View):
             return render(request, "label_create.html")
 
         if Label.objects.filter(name=name).exists():
-            messages.error(request, "Метка с таким именем уже существует")
+            messages.error(request, ERROR_LABEL_EXISTS)
             return render(request, "label_create.html")
 
         Label.objects.create(name=name)
-        messages.success(request, "Метка успешно создана")
+        messages.success(request, SUCCESS_LABEL_CREATED)
         return redirect("/labels/")
 
 
 class LabelUpdateView(LoginRequiredMixin, View):
-    login_url = "/login/"
-
     def get(self, request, pk, *args, **kwargs):
         label = get_object_or_404(Label, pk=pk)
         return render(request, "label_update.html", {"label": label})
@@ -252,26 +274,24 @@ class LabelUpdateView(LoginRequiredMixin, View):
             return render(request, "label_update.html", {"label": label})
 
         if name != label.name and Label.objects.filter(name=name).exists():
-            messages.error(request, "Метка с таким именем уже существует")
+            messages.error(request, ERROR_LABEL_EXISTS)
             return render(request, "label_update.html", {"label": label})
 
         label.name = name
         label.save()
 
-        messages.success(request, "Метка успешно изменена")
+        messages.success(request, SUCCESS_LABEL_UPDATED)
         return redirect("/labels/")
 
 
 class LabelDeleteView(LoginRequiredMixin, View):
-    login_url = "/login/"
-
     def get(self, request, pk, *args, **kwargs):
         label = get_object_or_404(Label, pk=pk)
         # Проверяем, есть ли задачи с этой меткой
         if label.tasks.exists():
             messages.error(
                 request,
-                "Невозможно удалить метку, потому что она используется в задачах",
+                ERROR_CANNOT_DELETE_LABEL,
             )
             return redirect("/labels/")
         return render(request, "label_delete.html", {"label": label})
@@ -282,25 +302,21 @@ class LabelDeleteView(LoginRequiredMixin, View):
         if label.tasks.exists():
             messages.error(
                 request,
-                "Невозможно удалить метку, потому что она используется в задачах",
+                ERROR_CANNOT_DELETE_LABEL,
             )
             return redirect("/labels/")
         label.delete()
-        messages.success(request, "Метка успешно удалена")
+        messages.success(request, SUCCESS_LABEL_DELETED)
         return redirect("/labels/")
 
 
 class StatusListView(LoginRequiredMixin, View):
-    login_url = "/login/"
-
     def get(self, request, *args, **kwargs):
         statuses = Status.objects.all().order_by("id")
         return render(request, "statuses.html", {"statuses": statuses})
 
 
 class StatusCreateView(LoginRequiredMixin, View):
-    login_url = "/login/"
-
     def get(self, request, *args, **kwargs):
         return render(request, "status_create.html")
 
@@ -312,17 +328,15 @@ class StatusCreateView(LoginRequiredMixin, View):
             return render(request, "status_create.html")
 
         if Status.objects.filter(name=name).exists():
-            messages.error(request, "Статус с таким именем уже существует")
+            messages.error(request, ERROR_STATUS_EXISTS)
             return render(request, "status_create.html")
 
         Status.objects.create(name=name)
-        messages.success(request, "Статус успешно создан")
+        messages.success(request, SUCCESS_STATUS_CREATED)
         return redirect("/statuses/")
 
 
 class StatusUpdateView(LoginRequiredMixin, View):
-    login_url = "/login/"
-
     def get(self, request, pk, *args, **kwargs):
         status = get_object_or_404(Status, pk=pk)
         return render(request, "status_update.html", {"status": status})
@@ -336,25 +350,23 @@ class StatusUpdateView(LoginRequiredMixin, View):
             return render(request, "status_update.html", {"status": status})
 
         if name != status.name and Status.objects.filter(name=name).exists():
-            messages.error(request, "Статус с таким именем уже существует")
+            messages.error(request, ERROR_STATUS_EXISTS)
             return render(request, "status_update.html", {"status": status})
 
         status.name = name
         status.save()
 
-        messages.success(request, "Статус успешно изменен")
+        messages.success(request, SUCCESS_STATUS_UPDATED)
         return redirect("/statuses/")
 
 
 class StatusDeleteView(LoginRequiredMixin, View):
-    login_url = "/login/"
-
     def get(self, request, pk, *args, **kwargs):
         status = get_object_or_404(Status, pk=pk)
         if status.tasks.exists():
             messages.error(
                 request,
-                "Невозможно удалить статус, потому что он используется в задачах",
+                ERROR_CANNOT_DELETE_STATUS,
             )
             return redirect("/statuses/")
 
@@ -366,11 +378,11 @@ class StatusDeleteView(LoginRequiredMixin, View):
         if status.tasks.exists():
             messages.error(
                 request,
-                "Невозможно удалить статус, потому что он используется в задачах",
+                ERROR_CANNOT_DELETE_STATUS,
             )
             return redirect("/statuses/")
         status.delete()
-        messages.success(request, "Статус успешно удален")
+        messages.success(request, SUCCESS_STATUS_DELETED)
         return redirect("/statuses/")
 
 
@@ -392,23 +404,22 @@ class UserLoginView(View):
 
         if user is not None:
             login(request, user)
-            messages.success(request, "Вы успешно вошли в систему")
+            messages.success(request, "SUCCESS_LOGIN")
             return redirect("/")
         else:
-            messages.error(request, "Неверное имя пользователя или пароль")
+            messages.error(request, ERROR_INVALID_CREDENTIALS)
             return render(request, "login.html")
 
 
 class UserLogoutView(View):
     def post(self, request, *args, **kwargs):
         logout(request)
-        messages.success(request, "Вы успешно вышли из системы")
+        messages.success(request, SUCCESS_LOGOUT)
         return redirect("/")
 
     def get(self, request, *args, **kwargs):
-        # Добавляем поддержку GET для отладки
         logout(request)
-        messages.success(request, "Вы успешно вышли из системы")
+        messages.success(request, SUCCESS_LOGOUT)
         return redirect("/")
 
 
@@ -423,31 +434,29 @@ class UserCreateView(View):
         password1 = request.POST.get("password1")
         password2 = request.POST.get("password2")
 
-        # Валидация
         errors = []
 
         if not username:
             errors.append("Имя пользователя обязательно")
 
         if User.objects.filter(username=username).exists():
-            errors.append("Пользователь с таким именем уже существует")
+            errors.append(ERROR_USERNAME_EXISTS)
 
         if not password1:
             errors.append("Пароль обязателен")
 
         if password1 != password2:
-            errors.append("Пароли не совпадают")
+            errors.append(ERROR_PASSWORD_MISMATCH)
 
         if len(password1) < 3:
-            errors.append("Пароль должен содержать минимум 3 символа")
+            errors.append(ERROR_PASSWORD_SHORT)
 
         if errors:
             for error in errors:
                 messages.error(request, error)
             return render(request, "registration.html")
 
-        # Создание пользователя
-        user = User.objects.create_user(
+        User.objects.create_user(
             username=username,
             password=password1,
             first_name=first_name,
@@ -459,16 +468,11 @@ class UserCreateView(View):
 
 
 class UserUpdateView(LoginRequiredMixin, View):
-    login_url = "/login/"
-
     def get(self, request, pk, *args, **kwargs):
         user = get_object_or_404(User, pk=pk)
 
-        # Проверка прав: пользователь может редактировать только себя
         if not request.user.is_superuser and request.user.id != user.id:
-            messages.error(
-                request, "У вас нет прав для редактирования этого пользователя"
-            )
+            messages.error(request, ERROR_NO_RIGHTS)
             return redirect("/users/")
 
         return render(request, "user_update.html", {"user": user})
@@ -476,11 +480,8 @@ class UserUpdateView(LoginRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         user = get_object_or_404(User, pk=pk)
 
-        # Проверка прав
         if not request.user.is_superuser and request.user.id != user.id:
-            messages.error(
-                request, "У вас нет прав для редактирования этого пользователя"
-            )
+            messages.error(request, ERROR_NO_RIGHTS)
             return redirect("/users/")
 
         first_name = request.POST.get("first_name")
@@ -489,45 +490,39 @@ class UserUpdateView(LoginRequiredMixin, View):
         password1 = request.POST.get("password1")
         password2 = request.POST.get("password2")
 
-        # Валидация
         errors = []
 
         if not username:
             errors.append("Имя пользователя обязательно")
 
-        # Проверка уникальности username (если он изменился)
         if (
             username != user.username
             and User.objects.filter(username=username).exists()
         ):
-            errors.append("Пользователь с таким именем уже существует")
+            errors.append(ERROR_USERNAME_EXISTS)
 
-        # Если пароль заполнен, проверяем его
         if password1 or password2:
             if not password1:
                 errors.append("Пароль обязателен")
             elif password1 != password2:
-                errors.append("Пароли не совпадают")
+                errors.append(ERROR_PASSWORD_MISMATCH)
             elif len(password1) < 3:
-                errors.append("Пароль должен содержать минимум 3 символа")
+                errors.append(ERROR_PASSWORD_SHORT)
 
         if errors:
             for error in errors:
                 messages.error(request, error)
             return render(request, "user_update.html", {"user": user})
 
-        # Обновление данных
         user.first_name = first_name
         user.last_name = last_name
         user.username = username
 
-        # Если пароль указан, обновляем его
         if password1:
             user.set_password(password1)
 
         user.save()
 
-        # Если пароль был изменен, нужно перенаправить на страницу входа
         if password1:
             messages.success(
                 request, "Пользователь успешно обновлен. Пожалуйста, войдите снова."
@@ -535,26 +530,23 @@ class UserUpdateView(LoginRequiredMixin, View):
             logout(request)
             return redirect("/login/")
         else:
-            messages.success(request, "Пользователь успешно обновлен")
+            messages.success(request, SUCCESS_USER_UPDATED)
             return redirect("/users/")
 
 
 class UserDeleteView(LoginRequiredMixin, View):
-    login_url = "/login/"
 
     def get(self, request, pk, *args, **kwargs):
         user = get_object_or_404(User, pk=pk)
 
-        # Проверка прав
         if not request.user.is_superuser and request.user.id != user.id:
-            messages.error(request, 'У вас нет прав для удаления этого пользователя')
-            return redirect('/users/')
-        
-        # Проверяем, есть ли задачи, где пользователь является автором или исполнителем
+            messages.error(request, "У вас нет прав для удаления этого пользователя")
+            return redirect("/users/")
+
         if user.authored_tasks.exists() or user.executed_tasks.exists():
             messages.error(
                 request,
-                "Невозможно удалить пользователя, потому что он связан с задачами",
+                ERROR_NO_RIGHTS,
             )
             return redirect("/users/")
 
@@ -563,19 +555,17 @@ class UserDeleteView(LoginRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         user = get_object_or_404(User, pk=pk)
 
-        # Проверка прав
         if not request.user.is_superuser and request.user.id != user.id:
-            messages.error(request, 'У вас нет прав для удаления этого пользователя')
-            return redirect('/users/')
-        
-        # Проверяем, есть ли задачи, где пользователь является автором или исполнителем
+            messages.error(request, "У вас нет прав для удаления этого пользователя")
+            return redirect("/users/")
+
         if user.authored_tasks.exists() or user.executed_tasks.exists():
             messages.error(
                 request,
-                "Невозможно удалить пользователя, потому что он связан с задачами",
+                ERROR_NO_RIGHTS,
             )
             return redirect("/users/")
-        
+
         user.delete()
-        messages.success(request, "Пользователь успешно удален")
+        messages.success(request, SUCCESS_USER_DELETED)
         return redirect("/users/")
