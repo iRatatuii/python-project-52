@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container wrapper flex-grow-1">
+    <h1 class="my-4">Задачи</h1>
+
+    <a class="btn btn-primary mb-3" href="/tasks/create/" role="button">Создать задачу</a>
+
+    <div class="card mb-3">
+        <div class="card-body bg-light">
+            <form class="form-inline center" method="get">
+                <div class="mb-3">
+                    <label class="form-label" for="id_status">Статус</label>
+                    <select name="status" class="form-select ml-2 mr-3" id="id_status">
+                        <option value="" selected="">---------</option>
+                        {% for status in statuses %}
+                            <option value="{{ status.id }}" {% if request.GET.status == status.id|stringformat:"s" %}selected{% endif %}>{{ status.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="id_executor">Исполнитель</label>
+                    <select name="executor" class="form-select mr-3 ml-2" id="id_executor">
+                        <option value="" selected="">---------</option>
+                        {% for user in users %}
+                        <option value="{{ user.id }}" {% if request.GET.executor == user.id|stringformat:"s" %}selected{% endif %}>{{ user.get_full_name|default:user.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="id_label">Метка</label>
+                    <select name="label" class="form-select mr-3 ml-2" id="id_label">
+                        <option value="" selected="">---------</option>
+                        {% for label in labels %}
+                        <option value="{{ label.id }}" {% if request.GET.label == label.id|stringformat:"s" %}selected{% endif %}>{{ label.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" name="self_tasks" class="form-check-input mr-3" id="id_self_tasks" {% if request.GET.self_tasks %}checked{% endif %}>
+                        <label class="form-check-label" for="id_self_tasks">Только свои задачи</label>
+                    </div>
+                </div>
+                <input class="btn btn-primary" type="submit" value="Показать">
+            </form>
+        </div>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Имя</th>
+                <th>Статус</th>
+                <th>Автор</th>
+                <th>Исполнитель</th>
+                <th>Дата создания</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr>
+                <td>{{ task.id }}</td>
+                <td>
+                    <a href="/tasks/{{ task.id }}/">{{ task.name }}</a>
+                </td>
+                <td>{{ task.status.name }}</td>
+                <td>{{ task.author.get_full_name|default:task.author.username }}</td>
+                <td>{% if task.executor %}{{ task.executor.get_full_name|default:task.executor.username }}{% endif %}
+                </td>
+                <td>{{ task.created_at|date:"d.m.Y H:i" }}</td>
+                <td>
+                    <a href="/tasks/{{ task.id }}/update/">Изменить</a>
+                    <br>
+                    <a href="/tasks/{{ task.id }}/delete/">Удалить</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

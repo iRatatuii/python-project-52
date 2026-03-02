@@ -10,6 +10,11 @@ from .views import (
     StatusDeleteView,
     StatusListView,
     StatusUpdateView,
+    TaskCreateView,
+    TaskDeleteView,
+    TaskDetailView,
+    TaskListView,
+    TaskUpdateView,
     UserCreateView,
     UserDeleteView,
     UserListView,
@@ -36,4 +41,10 @@ urlpatterns = [
     path("labels/create/", LabelCreateView.as_view(), name="label_create"),
     path("labels/<int:pk>/update/", LabelUpdateView.as_view(), name="label_update"),
     path("labels/<int:pk>/delete/", LabelDeleteView.as_view(), name="label_delete"),
+    # Task URLs
+    path("tasks/", TaskListView.as_view(), name="tasks"),
+    path("tasks/create/", TaskCreateView.as_view(), name="task_create"),
+    path("tasks/<int:pk>/", TaskDetailView.as_view(), name="task_detail"),
+    path("tasks/<int:pk>/update/", TaskUpdateView.as_view(), name="task_update"),
+    path("tasks/<int:pk>/delete/", TaskDeleteView.as_view(), name="task_delete"),
 ]
