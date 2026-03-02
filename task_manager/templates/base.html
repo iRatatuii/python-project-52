@@ -22,14 +22,36 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/users/">Пользователи</a>
                 </li>
+
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="/statuses/">Статусы</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/labels/">Метки</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/tasks/">Задачи</a>
+                </li>
+                {% endif %}
             </ul>
+
             <ul class="navbar-nav">
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <form action="/logout/" method="post">
+                        {% csrf_token %}
+                        <input class="btn nav-link" type="submit" value="Выход">
+                    </form>
+                </li>
+                {% else %}
                 <li class="nav-item">
                     <a class="nav-link" href="/login/">Вход</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/users/create/">Регистрация</a>
                 </li>
+                {% endif %}
             </ul>
         </div>
     </nav>
