@@ -267,10 +267,24 @@ class LabelDeleteView(LoginRequiredMixin, View):
 
     def get(self, request, pk, *args, **kwargs):
         label = get_object_or_404(Label, pk=pk)
+        # Проверяем, есть ли задачи с этой меткой
+        if label.tasks.exists():
+            messages.error(
+                request,
+                "Невозможно удалить метку, потому что она используется в задачах",
+            )
+            return redirect("/labels/")
         return render(request, "label_delete.html", {"label": label})
 
     def post(self, request, pk, *args, **kwargs):
         label = get_object_or_404(Label, pk=pk)
+        # Проверяем, есть ли задачи с этой меткой
+        if label.tasks.exists():
+            messages.error(
+                request,
+                "Невозможно удалить метку, потому что она используется в задачах",
+            )
+            return redirect("/labels/")
         label.delete()
         messages.success(request, "Метка успешно удалена")
         return redirect("/labels/")

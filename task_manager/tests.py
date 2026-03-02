@@ -885,3 +885,268 @@ class TaskCRUDTest(BaseTestCase):
         response = self.client.get(f"{self.tasks_url}?self_tasks=on")
         self.assertContains(response, "Test Task")
         self.assertNotContains(response, "Other Task")
+
+
+class LabelCRUDTest(BaseTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client.login(username="testuser1", password="testpass123")
+
+        self.label = Label.objects.create(name="Test Label")
+
+        self.labels_url = "/labels/"
+        self.label_create_url = "/labels/create/"
+        self.label_update_url = f"/labels/{self.label.id}/update/"
+        self.label_delete_url = f"/labels/{self.label.id}/delete/"
+
+    def test_label_list_view_authenticated(self):
+        """Тест: список меток доступен авторизованному пользователю"""
+        response = self.client.get(self.labels_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "labels.html")
+        self.assertContains(response, "Test Label")
+
+    def test_label_list_view_unauthenticated(self):
+        """Тест: неавторизованный пользователь перенаправляется на логин"""
+        self.client.logout()
+        response = self.client.get(self.labels_url)
+        self.assertRedirects(response, f"/login/?next={self.labels_url}")
+
+    def test_label_create_view_get(self):
+        """Тест: форма создания метки доступна"""
+        response = self.client.get(self.label_create_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "label_create.html")
+
+    def test_label_create_success(self):
+        """Тест: успешное создание метки"""
+        response = self.client.post(self.label_create_url, {"name": "New Label"})
+
+        self.assertRedirects(response, "/labels/")
+        self.assertTrue(Label.objects.filter(name="New Label").exists())
+
+        messages = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("успешно создана" in str(msg) for msg in messages))
+
+    def test_label_create_duplicate(self):
+        """Тест: создание метки с существующим именем"""
+        response = self.client.post(self.label_create_url, {"name": "Test Label"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "label_create.html")
+
+        messages = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("уже существует" in str(msg) for msg in messages))
+
+    def test_label_create_empty_name(self):
+        """Тест: создание метки с пустым именем"""
+        response = self.client.post(self.label_create_url, {"name": ""})
+
+        self.assertEqual(response.status_code, 200)
+
+        messages = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("Имя метки обязательно" in str(msg) for msg in messages))
+
+    def test_label_update_view_get(self):
+        """Тест: форма редактирования метки доступна"""
+        response = self.client.get(self.label_update_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "label_update.html")
+        self.assertContains(response, "Test Label")
+
+    def test_label_update_success(self):
+        """Тест: успешное обновление метки"""
+        response = self.client.post(self.label_update_url, {"name": "Updated Label"})
+
+        self.assertRedirects(response, "/labels/")
+        self.label.refresh_from_db()
+        self.assertEqual(self.label.name, "Updated Label")
+
+        messages = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("успешно изменена" in str(msg) for msg in messages))
+
+    def test_label_update_duplicate(self):
+        """Тест: обновление метки на существующее имя"""
+        Label.objects.create(name="Another Label")
+
+        response = self.client.post(self.label_update_url, {"name": "Another Label"})
+
+        self.assertEqual(response.status_code, 200)
+        self.label.refresh_from_db()
+        self.assertEqual(self.label.name, "Test Label")
+
+        messages = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("уже существует" in str(msg) for msg in messages))
+
+    def test_label_delete_view_get(self):
+        """Тест: страница подтверждения удаления доступна"""
+        response = self.client.get(self.label_delete_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "label_delete.html")
+        self.assertContains(response, "Test Label")
+
+    def test_label_delete_success(self):
+        """Тест: успешное удаление метки без задач"""
+        response = self.client.post(self.label_delete_url)
+
+        self.assertRedirects(response, "/labels/")
+        self.assertFalse(Label.objects.filter(id=self.label.id).exists())
+
+        messages = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("успешно удалена" in str(msg) for msg in messages))
+
+    def test_label_delete_with_tasks(self):
+        """Тест: нельзя удалить метку, связанную с задачами"""
+        # Создаем статус и задачу с этой меткой
+        status = Status.objects.create(name="Test Status")
+        task = Task.objects.create(name="Test Task", status=status, author=self.user1)
+        task.labels.add(self.label)
+
+        response = self.client.post(self.label_delete_url)
+
+        self.assertRedirects(response, "/labels/")
+        self.assertTrue(Label.objects.filter(id=self.label.id).exists())
+
+        messages = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("используется в задачах" in str(msg) for msg in messages))
+
+    def test_label_list_requires_login(self):
+        """Тест: все view меток требуют авторизации"""
+        self.client.logout()
+
+        urls = [
+            "/labels/",
+            "/labels/create/",
+            f"/labels/{self.label.id}/update/",
+            f"/labels/{self.label.id}/delete/",
+        ]
+
+        for url in urls:
+            response = self.client.get(url)
+            self.assertRedirects(response, f"/login/?next={url}")
+
+
+class LabelInTaskTest(BaseTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client.login(username="testuser1", password="testpass123")
+
+        self.status = Status.objects.create(name="Test Status")
+        self.label1 = Label.objects.create(name="Label 1")
+        self.label2 = Label.objects.create(name="Label 2")
+
+        self.task = Task.objects.create(
+            name="Test Task",
+            description="Test Description",
+            status=self.status,
+            author=self.user1,
+        )
+        self.task.labels.set([self.label1, self.label2])
+
+    def test_task_has_labels(self):
+        """Тест: задача имеет метки"""
+        self.assertEqual(self.task.labels.count(), 2)
+        self.assertIn(self.label1, self.task.labels.all())
+        self.assertIn(self.label2, self.task.labels.all())
+
+    def test_task_create_with_labels(self):
+        """Тест: создание задачи с метками"""
+        response = self.client.post(
+            "/tasks/create/",
+            {
+                "name": "New Task",
+                "description": "New Description",
+                "status": self.status.id,
+                "executor": "",
+                "labels": [self.label1.id, self.label2.id],
+            },
+        )
+
+        self.assertRedirects(response, "/tasks/")
+
+        task = Task.objects.get(name="New Task")
+        self.assertEqual(task.labels.count(), 2)
+
+    def test_task_update_with_labels(self):
+        """Тест: обновление задачи с метками"""
+        update_url = f"/tasks/{self.task.id}/update/"
+
+        response = self.client.post(
+            update_url,
+            {
+                "name": "Updated Task",
+                "description": "Updated Description",
+                "status": self.status.id,
+                "executor": "",
+                "labels": [self.label1.id],  # Оставляем только одну метку
+            },
+        )
+
+        self.assertRedirects(response, "/tasks/")
+
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.labels.count(), 1)
+        self.assertEqual(self.task.labels.first(), self.label1)
+
+    def test_task_update_without_labels(self):
+        """Тест: обновление задачи без меток"""
+        update_url = f"/tasks/{self.task.id}/update/"
+
+        response = self.client.post(
+            update_url,
+            {
+                "name": "Updated Task",
+                "description": "Updated Description",
+                "status": self.status.id,
+                "executor": "",
+                "labels": [],  # Убираем все метки
+            },
+        )
+
+        self.assertRedirects(response, "/tasks/")
+
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.labels.count(), 0)
+
+    def test_task_create_form_has_labels(self):
+        """Тест: форма создания задачи содержит список меток"""
+        response = self.client.get("/tasks/create/")
+        self.assertContains(response, "Label 1")
+        self.assertContains(response, "Label 2")
+        self.assertContains(response, "multiple")  # Проверяем атрибут multiple
+
+    def test_task_update_form_has_labels_with_selected(self):
+        """Тест: форма редактирования задачи содержит выбранные метки"""
+        update_url = f"/tasks/{self.task.id}/update/"
+        response = self.client.get(update_url)
+
+        # Проверяем, что метки отображаются и правильные выбраны
+        self.assertContains(response, "Label 1")
+        self.assertContains(response, "Label 2")
+        self.assertContains(response, "selected")  # Должны быть выбраны
+
+
+class LabelPermissionTest(BaseTestCase):
+    def test_unauthenticated_user_cannot_access_label_pages(self):
+        """Тест: неавторизованный пользователь не может зайти на страницы меток"""
+        urls = ["/labels/", "/labels/create/", "/labels/1/update/", "/labels/1/delete/"]
+
+        for url in urls:
+            response = self.client.get(url)
+            self.assertRedirects(response, f"/login/?next={url}")
+
+    def test_authenticated_user_can_access_label_pages(self):
+        """Тест: авторизованный пользователь может зайти на страницы меток"""
+        self.client.login(username="testuser1", password="testpass123")
+        label = Label.objects.create(name="Test Label")
+
+        urls = [
+            "/labels/",
+            "/labels/create/",
+            f"/labels/{label.id}/update/",
+            f"/labels/{label.id}/delete/",
+        ]
+
+        for url in urls:
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
