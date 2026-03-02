@@ -21,3 +21,15 @@ render-start:
 
 build:
 	./build.sh
+
+create-admin:
+	python manage.py createsuperuser
+
+test:
+	uv run pytest --ds=task_manager.settings --reuse-db
+
+test-verbose:
+	uv run pytest --ds=task_manager.settings --reuse-db -v
+
+test-coverage:
+	uv run pytest --ds=task_manager.settings --reuse-db --cov=task_manager --cov-report=term --cov-report=html
