@@ -337,10 +337,24 @@ class StatusDeleteView(LoginRequiredMixin, View):
 
     def get(self, request, pk, *args, **kwargs):
         status = get_object_or_404(Status, pk=pk)
+        if status.tasks.exists():
+            messages.error(
+                request,
+                "Невозможно удалить статус, потому что он используется в задачах",
+            )
+            return redirect("/statuses/")
+
+        return render(request, "status_delete.html", {"status": status})
         return render(request, "status_delete.html", {"status": status})
 
     def post(self, request, pk, *args, **kwargs):
         status = get_object_or_404(Status, pk=pk)
+        if status.tasks.exists():
+            messages.error(
+                request,
+                "Невозможно удалить статус, потому что он используется в задачах",
+            )
+            return redirect("/statuses/")
         status.delete()
         messages.success(request, "Статус успешно удален")
         return redirect("/statuses/")
