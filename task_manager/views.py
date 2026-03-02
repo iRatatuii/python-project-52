@@ -400,7 +400,7 @@ class UserLoginView(View):
 
         if user is not None:
             login(request, user)
-            messages.success(request, "SUCCESS_LOGIN")
+            messages.success(request, SUCCESS_LOGIN)
             return redirect("/")
         else:
             messages.error(request, ERROR_INVALID_CREDENTIALS)
