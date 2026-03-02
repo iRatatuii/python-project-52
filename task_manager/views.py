@@ -535,6 +535,14 @@ class UserDeleteView(LoginRequiredMixin, View):
         if not request.user.is_superuser and request.user.id != user.id:
             messages.error(request, 'У вас нет прав для удаления этого пользователя')
             return redirect('/users/')
+        
+        # Проверяем, есть ли задачи, где пользователь является автором или исполнителем
+        if user.authored_tasks.exists() or user.executed_tasks.exists():
+            messages.error(
+                request,
+                "Невозможно удалить пользователя, потому что он связан с задачами",
+            )
+            return redirect("/users/")
 
         return render(request, "user_delete.html", {"user": user})
 
@@ -545,7 +553,15 @@ class UserDeleteView(LoginRequiredMixin, View):
         if not request.user.is_superuser and request.user.id != user.id:
             messages.error(request, 'У вас нет прав для удаления этого пользователя')
             return redirect('/users/')
-
+        
+        # Проверяем, есть ли задачи, где пользователь является автором или исполнителем
+        if user.authored_tasks.exists() or user.executed_tasks.exists():
+            messages.error(
+                request,
+                "Невозможно удалить пользователя, потому что он связан с задачами",
+            )
+            return redirect("/users/")
+        
         user.delete()
         messages.success(request, "Пользователь успешно удален")
         return redirect("/users/")
