@@ -6,6 +6,8 @@ from django.test import Client, TestCase
 
 from task_manager.models import Label, Status, Task
 
+# nosec - тестовые учетные данные
+
 
 class BaseTestCase(TestCase):
     def setUp(self):
@@ -13,13 +15,13 @@ class BaseTestCase(TestCase):
         # Создаем пользователей для тестов
         self.user1 = User.objects.create_user(
             username="testuser1",
-            password="testpass123", 
+            password="testpass123",
             first_name="Test",
             last_name="User1",
         )
         self.user2 = User.objects.create_user(
             username="testuser2",
-            password="testpass123", 
+            password="testpass123",
             first_name="Test",
             last_name="User2",
         )
@@ -32,6 +34,7 @@ class BaseTestCase(TestCase):
         )
 
 
+# nosec
 class UserRegistrationTest(BaseTestCase):
     def setUp(self):
         super().setUp()
@@ -48,8 +51,8 @@ class UserRegistrationTest(BaseTestCase):
                 "first_name": "New",
                 "last_name": "User",
                 "username": "newuser",
-                "password1": "testpass123", 
-                "password2": "testpass123", 
+                "password1": "testpass123",
+                "password2": "testpass123",
             },
         )
 
@@ -67,8 +70,8 @@ class UserRegistrationTest(BaseTestCase):
                 "first_name": "New",
                 "last_name": "User",
                 "username": "newuser",
-                "password1": "pass123", 
-                "password2": "pass456", 
+                "password1": "pass123",
+                "password2": "pass456",
             },
         )
 
@@ -88,8 +91,8 @@ class UserRegistrationTest(BaseTestCase):
                 "first_name": "New",
                 "last_name": "User",
                 "username": "newuser",
-                "password1": "12", 
-                "password2": "12", 
+                "password1": "12",
+                "password2": "12",
             },
         )
 
@@ -108,8 +111,8 @@ class UserRegistrationTest(BaseTestCase):
                 "first_name": "New",
                 "last_name": "User",
                 "username": "testuser1",
-                "password1": "newpass123", 
-                "password2": "newpass123", 
+                "password1": "newpass123",
+                "password2": "newpass123",
             },
         )
 
@@ -133,7 +136,7 @@ class UserLoginTest(BaseTestCase):
             {
                 "username": "testuser1",
                 "password": "testpass123",
-            }, 
+            },
         )
 
         self.assertRedirects(response, "/")
@@ -141,7 +144,7 @@ class UserLoginTest(BaseTestCase):
 
     def test_login_invalid_credentials(self):
         response = self.client.post(
-            self.login_url, {"username": "testuser1", "password": "wrongpass"} 
+            self.login_url, {"username": "testuser1", "password": "wrongpass"}
         )
 
         self.assertEqual(response.status_code, 200)
@@ -161,7 +164,7 @@ class UserLoginTest(BaseTestCase):
             {
                 "username": "nonexistent",
                 "password": "pass123",
-            }, 
+            },
         )
 
         self.assertEqual(response.status_code, 200)
@@ -178,15 +181,13 @@ class UserUpdateTest(BaseTestCase):
         self.assertRedirects(response, f"/login/?next={self.update_url}")
 
     def test_update_page_status_code_authenticated(self):
-        self.client.login(
-            username="testuser1", password="testpass123"
-        )  
+        self.client.login(username="testuser1", password="testpass123")
         response = self.client.get(self.update_url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "user_update.html")
 
     def test_user_update_success(self):
-        self.client.login(username="testuser1", password="testpass123") 
+        self.client.login(username="testuser1", password="testpass123")
         response = self.client.post(
             self.update_url,
             {
@@ -205,17 +206,15 @@ class UserUpdateTest(BaseTestCase):
         self.assertEqual(self.user1.last_name, "Name")
 
     def test_user_update_with_new_password(self):
-        self.client.login(
-            username="testuser1", password="testpass123"
-        )  
+        self.client.login(username="testuser1", password="testpass123")
         response = self.client.post(
             self.update_url,
             {
                 "first_name": "Updated",
                 "last_name": "Name",
                 "username": "testuser1",
-                "password1": "newpass123", 
-                "password2": "newpass123", 
+                "password1": "newpass123",
+                "password2": "newpass123",
             },
         )
 
@@ -224,20 +223,18 @@ class UserUpdateTest(BaseTestCase):
         # Проверяем, что старый пароль больше не работает
         login_success = self.client.login(
             username="testuser1",
-            password="testpass123", 
+            password="testpass123",
         )
         self.assertFalse(login_success)
 
         # Проверяем, что можно войти с новым паролем
         login_success = self.client.login(
-            username="testuser1", password="newpass123" 
+            username="testuser1", password="newpass123"
         )
         self.assertTrue(login_success)
 
     def test_user_update_unauthorized(self):
-        self.client.login(
-            username="testuser1", password="testpass123"
-        )  
+        self.client.login(username="testuser1", password="testpass123")
         other_update_url = f"/users/{self.user2.id}/update/"
         response = self.client.get(other_update_url)
 
@@ -259,21 +256,21 @@ class UserDeleteTest(BaseTestCase):
     def test_delete_page_status_code_authenticated(self):
         self.client.login(
             username="testuser1",
-            password="testpass123", 
-        )  
+            password="testpass123",
+        )
         response = self.client.get(self.delete_url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "user_delete.html")
 
     def test_user_delete_success(self):
-        self.client.login(username="testuser1", password="testpass123") 
+        self.client.login(username="testuser1", password="testpass123")
         response = self.client.post(self.delete_url)
 
         self.assertRedirects(response, "/users/")
         self.assertFalse(User.objects.filter(id=self.user1.id).exists())
 
     def test_user_delete_unauthorized(self):
-        self.client.login(username="testuser1", password="testpass123") 
+        self.client.login(username="testuser1", password="testpass123")
         other_delete_url = f"/users/{self.user2.id}/delete/"
         response = self.client.post(other_delete_url)
 
@@ -315,7 +312,7 @@ class UserListViewTest(BaseTestCase):
 class AdminUserTest(BaseTestCase):
     def setUp(self):
         super().setUp()
-        self.client.login(username="adminuser", password="testpass123") 
+        self.client.login(username="adminuser", password="testpass123")
 
     def test_admin_can_edit_any_user(self):
         update_url = f"/users/{self.user1.id}/update/"
@@ -328,8 +325,8 @@ class AdminUserTest(BaseTestCase):
                 "first_name": "AdminEdited",
                 "last_name": "User",
                 "username": self.user1.username,
-                "password1": "", 
-                "password2": "", 
+                "password1": "",
+                "password2": "",
             },
         )
 
@@ -349,9 +346,7 @@ class LogoutTest(BaseTestCase):
     def setUp(self):
         super().setUp()
         self.logout_url = "/logout/"
-        self.client.login(
-            username="testuser1", password="testpass123"
-        )  
+        self.client.login(username="testuser1", password="testpass123")
 
     def test_logout_post(self):
         response = self.client.post(self.logout_url)
@@ -424,7 +419,7 @@ class TaskModelTest(BaseTestCase):
 class StatusCRUDTest(BaseTestCase):
     def setUp(self):
         super().setUp()
-        self.client.login(username="testuser1", password="testpass123") 
+        self.client.login(username="testuser1", password="testpass123")
         self.status = Status.objects.create(name="Test Status")
         self.statuses_url = "/statuses/"
         self.status_create_url = "/statuses/create/"
@@ -586,9 +581,7 @@ class StatusPermissionTest(BaseTestCase):
 
     def test_authenticated_user_can_access_status_pages(self):
         """Тест: авторизованный пользователь может зайти на страницы статусов"""
-        self.client.login(
-            username="testuser1", password="testpass123"
-        )  
+        self.client.login(username="testuser1", password="testpass123")
         status = Status.objects.create(name="Test Status")
 
         urls = [
