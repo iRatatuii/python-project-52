@@ -427,7 +427,7 @@ class UserCreateView(View):
         )
 
         messages.success(request, "Регистрация прошла успешно")
-        return redirect("/")
+        return redirect("/login/")
 
 
 class UserUpdateView(LoginRequiredMixin, View):
