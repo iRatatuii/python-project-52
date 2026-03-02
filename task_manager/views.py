@@ -125,6 +125,11 @@ class TaskUpdateView(LoginRequiredMixin, View):
 
     def get(self, request, pk, *args, **kwargs):
         task = get_object_or_404(Task, pk=pk)
+
+        if not request.user.is_superuser and task.author != request.user:
+            messages.error(request, "Задачу может редактировать только её автор")
+            return redirect("/tasks/")
+
         statuses = Status.objects.all()
         users = User.objects.all()
         labels = Label.objects.all()
@@ -140,6 +145,10 @@ class TaskUpdateView(LoginRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         task = get_object_or_404(Task, pk=pk)
 
+        if not request.user.is_superuser and task.author != request.user:
+            messages.error(request, "Задачу может редактировать только её автор")
+            return redirect("/tasks/")
+        
         name = request.POST.get("name")
         description = request.POST.get("description", "")
         status_id = request.POST.get("status")
@@ -179,10 +188,19 @@ class TaskDeleteView(LoginRequiredMixin, View):
 
     def get(self, request, pk, *args, **kwargs):
         task = get_object_or_404(Task, pk=pk)
+
+        if not request.user.is_superuser and task.author != request.user:
+            messages.error(request, "Задачу может удалить только её автор")
+            return redirect("/tasks/")
+
         return render(request, "task_delete.html", {"task": task})
 
     def post(self, request, pk, *args, **kwargs):
         task = get_object_or_404(Task, pk=pk)
+
+        if not request.user.is_superuser and task.author != request.user:
+            messages.error(request, "Задачу может удалить только её автор")
+            return redirect("/tasks/")
         task.delete()
         messages.success(request, "Задача успешно удалена")
         return redirect("/tasks/")
@@ -419,7 +437,7 @@ class UserUpdateView(LoginRequiredMixin, View):
         user = get_object_or_404(User, pk=pk)
 
         # Проверка прав: пользователь может редактировать только себя
-        if request.user.id != user.id:
+        if not request.user.is_superuser and request.user.id != user.id:
             messages.error(
                 request, "У вас нет прав для редактирования этого пользователя"
             )
@@ -431,7 +449,7 @@ class UserUpdateView(LoginRequiredMixin, View):
         user = get_object_or_404(User, pk=pk)
 
         # Проверка прав
-        if request.user.id != user.id:
+        if not request.user.is_superuser and request.user.id != user.id:
             messages.error(
                 request, "У вас нет прав для редактирования этого пользователя"
             )
@@ -500,9 +518,9 @@ class UserDeleteView(LoginRequiredMixin, View):
         user = get_object_or_404(User, pk=pk)
 
         # Проверка прав
-        if request.user.id != user.id:
-            messages.error(request, "У вас нет прав для удаления этого пользователя")
-            return redirect("/users/")
+        if not request.user.is_superuser and request.user.id != user.id:
+            messages.error(request, 'У вас нет прав для удаления этого пользователя')
+            return redirect('/users/')
 
         return render(request, "user_delete.html", {"user": user})
 
@@ -510,9 +528,9 @@ class UserDeleteView(LoginRequiredMixin, View):
         user = get_object_or_404(User, pk=pk)
 
         # Проверка прав
-        if request.user.id != user.id:
-            messages.error(request, "У вас нет прав для удаления этого пользователя")
-            return redirect("/users/")
+        if not request.user.is_superuser and request.user.id != user.id:
+            messages.error(request, 'У вас нет прав для удаления этого пользователя')
+            return redirect('/users/')
 
         user.delete()
         messages.success(request, "Пользователь успешно удален")
