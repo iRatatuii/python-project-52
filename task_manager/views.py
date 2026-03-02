@@ -29,7 +29,7 @@ ERROR_CANNOT_DELETE_LABEL = (
 ERROR_TASK_DELETE_RIGHTS = "Задачу может удалить только её автор"
 ERROR_TASK_EDIT_RIGHTS = "Задачу может редактировать только её автор"
 ERROR_INVALID_CREDENTIALS = "Неверное имя пользователя или пароль"
-
+ERROR_NAME_REQUIRED = "Имя обязательно"
 ERROR_STATUS_REQUIRED = "Статус обязателен"
 ERROR_PASSWORD_MISMATCH = "Пароли не совпадают"
 ERROR_PASSWORD_SHORT = "Пароль должен содержать минимум 3 символа"
@@ -473,27 +473,22 @@ class UserUpdateView(LoginRequiredMixin, View):
 
         if not request.user.is_superuser and request.user.id != user.id:
             messages.error(request, ERROR_NO_RIGHTS)
-            return redirect("/users/")
+            return redirect(USERS_URL)
 
         return render(request, "user_update.html", {"user": user})
 
-    def post(self, request, pk, *args, **kwargs):
-        user = get_object_or_404(User, pk=pk)
-
-        if not request.user.is_superuser and request.user.id != user.id:
-            messages.error(request, ERROR_NO_RIGHTS)
-            return redirect("/users/")
-
-        first_name = request.POST.get("first_name")
-        last_name = request.POST.get("last_name")
-        username = request.POST.get("username")
-        password1 = request.POST.get("password1")
-        password2 = request.POST.get("password2")
+    def _validate_user_data(self, user, post_data):
+        """Валидация данных пользователя"""
+        first_name = post_data.get("first_name")
+        last_name = post_data.get("last_name")
+        username = post_data.get("username")
+        password1 = post_data.get("password1")
+        password2 = post_data.get("password2")
 
         errors = []
 
         if not username:
-            errors.append("Имя пользователя обязательно")
+            errors.append(ERROR_NAME_REQUIRED)
 
         if (
             username != user.username
@@ -509,38 +504,61 @@ class UserUpdateView(LoginRequiredMixin, View):
             elif len(password1) < 3:
                 errors.append(ERROR_PASSWORD_SHORT)
 
+        return errors, {
+            "first_name": first_name,
+            "last_name": last_name,
+            "username": username,
+            "password1": password1,
+            "password2": password2,
+        }
+
+    def _update_user_data(self, user, data):
+        """Обновление данных пользователя"""
+        user.first_name = data["first_name"]
+        user.last_name = data["last_name"]
+        user.username = data["username"]
+
+        if data["password1"]:
+            user.set_password(data["password1"])
+
+        user.save()
+        return data["password1"]
+
+    def post(self, request, pk, *args, **kwargs):
+        user = get_object_or_404(User, pk=pk)
+
+        if not request.user.is_superuser and request.user.id != user.id:
+            messages.error(request, ERROR_NO_RIGHTS)
+            return redirect(USERS_URL)
+
+        # Валидация
+        errors, data = self._validate_user_data(user, request.POST)
+
         if errors:
             for error in errors:
                 messages.error(request, error)
             return render(request, "user_update.html", {"user": user})
 
-        user.first_name = first_name
-        user.last_name = last_name
-        user.username = username
+        # Обновление данных
+        password_changed = self._update_user_data(user, data)
 
-        if password1:
-            user.set_password(password1)
-
-        user.save()
-
-        if password1:
-            messages.success(
-                request, "Пользователь успешно обновлен. Пожалуйста, войдите снова."
-            )
+        if password_changed:
+            messages.success(request, SUCCESS_USER_UPDATED)
             logout(request)
-            return redirect("/login/")
+            return redirect(LOGIN_URL)
         else:
             messages.success(request, SUCCESS_USER_UPDATED)
-            return redirect("/users/")
+            return redirect(USERS_URL)
 
 
 class UserDeleteView(LoginRequiredMixin, View):
-
     def get(self, request, pk, *args, **kwargs):
         user = get_object_or_404(User, pk=pk)
 
         if not request.user.is_superuser and request.user.id != user.id:
-            messages.error(request, "У вас нет прав для удаления этого пользователя")
+            messages.error(
+                request, "У вас нет прав для удаления этого пользователя"
+            )
             return redirect("/users/")
 
         if user.authored_tasks.exists() or user.executed_tasks.exists():
@@ -556,7 +574,9 @@ class UserDeleteView(LoginRequiredMixin, View):
         user = get_object_or_404(User, pk=pk)
 
         if not request.user.is_superuser and request.user.id != user.id:
-            messages.error(request, "У вас нет прав для удаления этого пользователя")
+            messages.error(
+                request, "У вас нет прав для удаления этого пользователя"
+            )
             return redirect("/users/")
 
         if user.authored_tasks.exists() or user.executed_tasks.exists():
