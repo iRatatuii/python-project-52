@@ -354,7 +354,13 @@ class UserLoginView(View):
 
 
 class UserLogoutView(View):
+    def post(self, request, *args, **kwargs):
+        logout(request)
+        messages.success(request, "Вы успешно вышли из системы")
+        return redirect("/")
+
     def get(self, request, *args, **kwargs):
+        # Добавляем поддержку GET для отладки
         logout(request)
         messages.success(request, "Вы успешно вышли из системы")
         return redirect("/")
