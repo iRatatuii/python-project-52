@@ -12,29 +12,27 @@ from task_manager.models import Label, Status, Task
 class BaseTestCase(TestCase):
     def setUp(self):
         self.client = Client()
-        # Создаем пользователей для тестов
         self.user1 = User.objects.create_user(
             username="testuser1",
-            password="testpass123",
+            password="testpass123",  # nosec
             first_name="Test",
             last_name="User1",
         )
         self.user2 = User.objects.create_user(
             username="testuser2",
-            password="testpass123",
+            password="testpass123",  # nosec
             first_name="Test",
             last_name="User2",
         )
         self.admin = User.objects.create_superuser(
             username="adminuser",
-            password="testpass123",
+            password="testpass123",  # nosec
             first_name="Admin",
             last_name="User",
             email="admin@example.com",
         )
 
 
-# nosec
 class UserRegistrationTest(BaseTestCase):
     def setUp(self):
         super().setUp()
@@ -51,8 +49,8 @@ class UserRegistrationTest(BaseTestCase):
                 "first_name": "New",
                 "last_name": "User",
                 "username": "newuser",
-                "password1": "testpass123",
-                "password2": "testpass123",
+                "password1": "testpass123",  # nosec
+                "password2": "testpass123",  # nosec
             },
         )
 
@@ -70,8 +68,8 @@ class UserRegistrationTest(BaseTestCase):
                 "first_name": "New",
                 "last_name": "User",
                 "username": "newuser",
-                "password1": "pass123",
-                "password2": "pass456",
+                "password1": "pass123",  # nosec
+                "password2": "pass456",  # nosec
             },
         )
 
@@ -91,8 +89,8 @@ class UserRegistrationTest(BaseTestCase):
                 "first_name": "New",
                 "last_name": "User",
                 "username": "newuser",
-                "password1": "12",
-                "password2": "12",
+                "password1": "12",  # nosec
+                "password2": "12",  # nosec
             },
         )
 
@@ -111,8 +109,8 @@ class UserRegistrationTest(BaseTestCase):
                 "first_name": "New",
                 "last_name": "User",
                 "username": "testuser1",
-                "password1": "newpass123",
-                "password2": "newpass123",
+                "password1": "newpass123",  # nosec
+                "password2": "newpass123",  # nosec
             },
         )
 
@@ -135,7 +133,7 @@ class UserLoginTest(BaseTestCase):
             self.login_url,
             {
                 "username": "testuser1",
-                "password": "testpass123",
+                "password": "testpass123",  # nosec
             },
         )
 
@@ -144,7 +142,8 @@ class UserLoginTest(BaseTestCase):
 
     def test_login_invalid_credentials(self):
         response = self.client.post(
-            self.login_url, {"username": "testuser1", "password": "wrongpass"}
+            self.login_url,
+            {"username": "testuser1", "password": "wrongpass"},  # nosec
         )
 
         self.assertEqual(response.status_code, 200)
@@ -163,7 +162,7 @@ class UserLoginTest(BaseTestCase):
             self.login_url,
             {
                 "username": "nonexistent",
-                "password": "pass123",
+                "password": "pass123",  # nosec
             },
         )
 
@@ -171,6 +170,7 @@ class UserLoginTest(BaseTestCase):
         self.assertFalse(response.wsgi_request.user.is_authenticated)
 
 
+# nosec
 class UserUpdateTest(BaseTestCase):
     def setUp(self):
         super().setUp()
@@ -181,21 +181,21 @@ class UserUpdateTest(BaseTestCase):
         self.assertRedirects(response, f"/login/?next={self.update_url}")
 
     def test_update_page_status_code_authenticated(self):
-        self.client.login(username="testuser1", password="testpass123")
+        self.client.login(username="testuser1", password="testpass123")  # nosec
         response = self.client.get(self.update_url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "user_update.html")
 
     def test_user_update_success(self):
-        self.client.login(username="testuser1", password="testpass123")
+        self.client.login(username="testuser1", password="testpass123")  # nosec
         response = self.client.post(
             self.update_url,
             {
                 "first_name": "Updated",
                 "last_name": "Name",
                 "username": "testuser1",
-                "password1": "",
-                "password2": "",
+                "password1": "",  # nosec
+                "password2": "",  # nosec
             },
         )
 
@@ -206,35 +206,34 @@ class UserUpdateTest(BaseTestCase):
         self.assertEqual(self.user1.last_name, "Name")
 
     def test_user_update_with_new_password(self):
-        self.client.login(username="testuser1", password="testpass123")
+        self.client.login(username="testuser1", password="testpass123")  # nosec
         response = self.client.post(
             self.update_url,
             {
                 "first_name": "Updated",
                 "last_name": "Name",
                 "username": "testuser1",
-                "password1": "newpass123",
-                "password2": "newpass123",
+                "password1": "newpass123",  # nosec
+                "password2": "newpass123",  # nosec
             },
         )
 
         self.assertRedirects(response, "/login/")
 
-        # Проверяем, что старый пароль больше не работает
         login_success = self.client.login(
             username="testuser1",
-            password="testpass123",
+            password="testpass123",  # nosec
         )
         self.assertFalse(login_success)
 
-        # Проверяем, что можно войти с новым паролем
         login_success = self.client.login(
-            username="testuser1", password="newpass123"
+            username="testuser1",
+            password="newpass123",  # nosec
         )
         self.assertTrue(login_success)
 
     def test_user_update_unauthorized(self):
-        self.client.login(username="testuser1", password="testpass123")
+        self.client.login(username="testuser1", password="testpass123")  # nosec
         other_update_url = f"/users/{self.user2.id}/update/"
         response = self.client.get(other_update_url)
 
@@ -256,7 +255,7 @@ class UserDeleteTest(BaseTestCase):
     def test_delete_page_status_code_authenticated(self):
         self.client.login(
             username="testuser1",
-            password="testpass123",
+            password="testpass123",  # nosec
         )
         response = self.client.get(self.delete_url)
         self.assertEqual(response.status_code, 200)
@@ -325,8 +324,8 @@ class AdminUserTest(BaseTestCase):
                 "first_name": "AdminEdited",
                 "last_name": "User",
                 "username": self.user1.username,
-                "password1": "",
-                "password2": "",
+                "password1": "",  # nosec
+                "password2": "",  # nosec
             },
         )
 
@@ -346,7 +345,7 @@ class LogoutTest(BaseTestCase):
     def setUp(self):
         super().setUp()
         self.logout_url = "/logout/"
-        self.client.login(username="testuser1", password="testpass123")
+        self.client.login(username="testuser1", password="testpass123")  # nosec
 
     def test_logout_post(self):
         response = self.client.post(self.logout_url)
@@ -419,7 +418,7 @@ class TaskModelTest(BaseTestCase):
 class StatusCRUDTest(BaseTestCase):
     def setUp(self):
         super().setUp()
-        self.client.login(username="testuser1", password="testpass123")
+        self.client.login(username="testuser1", password="testpass123")  # nosec
         self.status = Status.objects.create(name="Test Status")
         self.statuses_url = "/statuses/"
         self.status_create_url = "/statuses/create/"
@@ -644,21 +643,11 @@ class UserDeleteWithTasksTest(BaseTestCase):
     def test_admin_can_delete_user_with_tasks(self):
         """Тест: админ может удалить пользователя даже с задачами
         (опционально)"""
-        # Если хотим, чтобы админ мог удалять пользователей с задачами
         self.client.login(username="adminuser", password="testpass123")
         delete_url = f"/users/{self.user1.id}/delete/"
 
         response = self.client.post(delete_url)
 
-        # Если разрешено админу - проверяем удаление
-        # Если нет - проверяем что не удалилось
-        # Тут нужно выбрать поведение
-
-        # Вариант 1: Админ может удалять
-        # self.assertRedirects(response, '/users/')
-        # self.assertFalse(User.objects.filter(id=self.user1.id).exists())
-
-        # Вариант 2: Админ тоже не может удалять
         self.assertRedirects(response, "/users/")
         self.assertTrue(User.objects.filter(id=self.user1.id).exists())
         messages = list(get_messages(response.wsgi_request))
@@ -687,7 +676,7 @@ class UserDeleteWithTasksTest(BaseTestCase):
 class TaskCRUDTest(BaseTestCase):
     def setUp(self):
         super().setUp()
-        self.client.login(username="testuser1", password="testpass123")
+        self.client.login(username="testuser1", password="testpass123")  # nosec
 
         self.status = Status.objects.create(name="Test Status")
         self.label1 = Label.objects.create(name="Label 1")
@@ -856,7 +845,7 @@ class TaskCRUDTest(BaseTestCase):
     def test_task_update_by_non_author(self):
         """Тест: не автор не может редактировать задачу"""
         self.client.logout()
-        self.client.login(username="testuser2", password="testpass123")
+        self.client.login(username="testuser2", password="testpass123")  # nosec
 
         response = self.client.get(self.task_update_url)
         self.assertRedirects(response, "/tasks/")
@@ -910,7 +899,6 @@ class TaskCRUDTest(BaseTestCase):
 
     def test_task_filter_by_status(self):
         """Тест: фильтрация задач по статусу"""
-        # Создаем еще один статус и задачу
         status2 = Status.objects.create(name="Another Status")
         Task.objects.create(
             name="Another Task", status=status2, author=self.user1
@@ -932,7 +920,6 @@ class TaskCRUDTest(BaseTestCase):
 
     def test_task_filter_self_tasks(self):
         """Тест: фильтрация задач, где пользователь автор"""
-        # Создаем задачу другого автора
         Task.objects.create(
             name="Other Task", status=self.status, author=self.user2
         )
@@ -945,7 +932,7 @@ class TaskCRUDTest(BaseTestCase):
 class LabelCRUDTest(BaseTestCase):
     def setUp(self):
         super().setUp()
-        self.client.login(username="testuser1", password="testpass123")
+        self.client.login(username="testuser1", password="testpass123")  # nosec
 
         self.label = Label.objects.create(name="Test Label")
 
@@ -1062,7 +1049,6 @@ class LabelCRUDTest(BaseTestCase):
 
     def test_label_delete_with_tasks(self):
         """Тест: нельзя удалить метку, связанную с задачами"""
-        # Создаем статус и задачу с этой меткой
         status = Status.objects.create(name="Test Status")
         task = Task.objects.create(
             name="Test Task", status=status, author=self.user1
@@ -1098,7 +1084,7 @@ class LabelCRUDTest(BaseTestCase):
 class LabelInTaskTest(BaseTestCase):
     def setUp(self):
         super().setUp()
-        self.client.login(username="testuser1", password="testpass123")
+        self.client.login(username="testuser1", password="testpass123")  # nosec
 
         self.status = Status.objects.create(name="Test Status")
         self.label1 = Label.objects.create(name="Label 1")
@@ -1147,7 +1133,7 @@ class LabelInTaskTest(BaseTestCase):
                 "description": "Updated Description",
                 "status": self.status.id,
                 "executor": "",
-                "labels": [self.label1.id],  # Оставляем только одну метку
+                "labels": [self.label1.id],
             },
         )
 
@@ -1168,7 +1154,7 @@ class LabelInTaskTest(BaseTestCase):
                 "description": "Updated Description",
                 "status": self.status.id,
                 "executor": "",
-                "labels": [],  # Убираем все метки
+                "labels": [],
             },
         )
 
@@ -1182,17 +1168,16 @@ class LabelInTaskTest(BaseTestCase):
         response = self.client.get("/tasks/create/")
         self.assertContains(response, "Label 1")
         self.assertContains(response, "Label 2")
-        self.assertContains(response, "multiple")  # Проверяем атрибут multiple
+        self.assertContains(response, "multiple")
 
     def test_task_update_form_has_labels_with_selected(self):
         """Тест: форма редактирования задачи содержит выбранные метки"""
         update_url = f"/tasks/{self.task.id}/update/"
         response = self.client.get(update_url)
 
-        # Проверяем, что метки отображаются и правильные выбраны
         self.assertContains(response, "Label 1")
         self.assertContains(response, "Label 2")
-        self.assertContains(response, "selected")  # Должны быть выбраны
+        self.assertContains(response, "selected")
 
 
 class LabelPermissionTest(BaseTestCase):
@@ -1230,7 +1215,7 @@ class LabelPermissionTest(BaseTestCase):
 class TaskFilterTest(BaseTestCase):
     def setUp(self):
         super().setUp()
-        self.client.login(username="testuser1", password="testpass123")
+        self.client.login(username="testuser1", password="testpass123")  # nosec
 
         # Создаем статусы
         self.status1 = Status.objects.create(name="Status 1")
@@ -1282,14 +1267,12 @@ class TaskFilterTest(BaseTestCase):
 
     def test_filter_by_status(self):
         """Тест: фильтрация задач по статусу"""
-        # Фильтр по status1
         response = self.client.get(f"{self.tasks_url}?status={self.status1.id}")
         self.assertContains(response, "Task 1")
         self.assertContains(response, "Task 3")
         self.assertNotContains(response, "Task 2")
         self.assertNotContains(response, "Task 4")
 
-        # Фильтр по status2
         response = self.client.get(f"{self.tasks_url}?status={self.status2.id}")
         self.assertContains(response, "Task 2")
         self.assertContains(response, "Task 4")
@@ -1298,43 +1281,35 @@ class TaskFilterTest(BaseTestCase):
 
     def test_filter_by_executor(self):
         """Тест: фильтрация задач по исполнителю"""
-        # Фильтр по user2 (исполнитель)
         response = self.client.get(f"{self.tasks_url}?executor={self.user2.id}")
         self.assertContains(response, "Task 1")
         self.assertContains(response, "Task 4")
-        self.assertNotContains(
-            response, "Task 2"
-        )  # Task2 имеет исполнителя user1
-        self.assertNotContains(response, "Task 3")  # Task3 не имеет исполнителя
+        self.assertNotContains(response, "Task 2")
+        self.assertNotContains(response, "Task 3")
 
-        # Фильтр по user1 (исполнитель)
         response = self.client.get(f"{self.tasks_url}?executor={self.user1.id}")
         self.assertContains(response, "Task 2")
         self.assertNotContains(response, "Task 1")
         self.assertNotContains(response, "Task 3")
         self.assertNotContains(response, "Task 4")
 
-        # Фильтр по несуществующему исполнителю
         response = self.client.get(f"{self.tasks_url}?executor=999")
         self.assertEqual(len(response.context["tasks"]), 0)
 
     def test_filter_by_label(self):
         """Тест: фильтрация задач по метке"""
-        # Фильтр по label1
         response = self.client.get(f"{self.tasks_url}?label={self.label1.id}")
         self.assertContains(response, "Task 1")
         self.assertContains(response, "Task 3")
         self.assertNotContains(response, "Task 2")
         self.assertNotContains(response, "Task 4")
 
-        # Фильтр по label2
         response = self.client.get(f"{self.tasks_url}?label={self.label2.id}")
         self.assertContains(response, "Task 1")
         self.assertContains(response, "Task 2")
         self.assertNotContains(response, "Task 3")
         self.assertNotContains(response, "Task 4")
 
-        # Фильтр по label3
         response = self.client.get(f"{self.tasks_url}?label={self.label3.id}")
         self.assertContains(response, "Task 2")
         self.assertContains(response, "Task 4")
@@ -1343,14 +1318,12 @@ class TaskFilterTest(BaseTestCase):
 
     def test_filter_self_tasks(self):
         """Тест: фильтрация задач, где пользователь является автором"""
-        # Логинимся как user1
         response = self.client.get(f"{self.tasks_url}?self_tasks=on")
         self.assertContains(response, "Task 1")
         self.assertContains(response, "Task 3")
         self.assertNotContains(response, "Task 2")
         self.assertNotContains(response, "Task 4")
 
-        # Логинимся как user2
         self.client.logout()
         self.client.login(username="testuser2", password="testpass123")
         response = self.client.get(f"{self.tasks_url}?self_tasks=on")
@@ -1359,7 +1332,6 @@ class TaskFilterTest(BaseTestCase):
         self.assertNotContains(response, "Task 3")
         self.assertNotContains(response, "Task 4")
 
-        # Логинимся как admin
         self.client.logout()
         self.client.login(username="adminuser", password="testpass123")
         response = self.client.get(f"{self.tasks_url}?self_tasks=on")
@@ -1370,7 +1342,6 @@ class TaskFilterTest(BaseTestCase):
 
     def test_combined_filters(self):
         """Тест: комбинированная фильтрация"""
-        # Статус 1 + автор user1
         response = self.client.get(
             f"{self.tasks_url}?status={self.status1.id}&self_tasks=on"
         )
@@ -1378,7 +1349,6 @@ class TaskFilterTest(BaseTestCase):
         self.assertContains(response, "Task 3")
         self.assertEqual(len(response.context["tasks"]), 2)
 
-        # Статус 1 + метка label1
         response = self.client.get(
             f"{self.tasks_url}?status={self.status1.id}&label={self.label1.id}"
         )
@@ -1386,35 +1356,28 @@ class TaskFilterTest(BaseTestCase):
         self.assertContains(response, "Task 3")
         self.assertEqual(len(response.context["tasks"]), 2)
 
-        # Статус 2 + исполнитель user2
         response = self.client.get(
             f"{self.tasks_url}?status={self.status2.id}&executor={self.user2.id}"
         )
         self.assertContains(response, "Task 4")
-        self.assertNotContains(
-            response, "Task 2"
-        )  # Task2 имеет исполнителя user1
+        self.assertNotContains(response, "Task 2")
         self.assertEqual(len(response.context["tasks"]), 1)
 
-        # Метка label2 + автор user1
         response = self.client.get(
             f"{self.tasks_url}?label={self.label2.id}&self_tasks=on"
         )
         self.assertContains(response, "Task 1")
-        self.assertNotContains(response, "Task 2")  # Task2 не автор user1
+        self.assertNotContains(response, "Task 2")
         self.assertEqual(len(response.context["tasks"]), 1)
 
     def test_filter_with_no_results(self):
         """Тест: фильтр, не дающий результатов"""
-        # Несуществующий статус
         response = self.client.get(f"{self.tasks_url}?status=999")
         self.assertEqual(len(response.context["tasks"]), 0)
 
-        # Несуществующая метка
         response = self.client.get(f"{self.tasks_url}?label=999")
         self.assertEqual(len(response.context["tasks"]), 0)
 
-        # Комбинация, которая не даст результатов
         response = self.client.get(
             f"{self.tasks_url}?status={self.status1.id}&executor={self.admin.id}"
         )
@@ -1426,22 +1389,18 @@ class TaskFilterTest(BaseTestCase):
             f"{self.tasks_url}?status={self.status1.id}&self_tasks=on&label={self.label1.id}"
         )
 
-        # Проверяем, что в HTML выбран правильный статус
         self.assertContains(
             response, f'<option value="{self.status1.id}" selected'
         )
 
-        # Проверяем, что чекбокс "Только свои задачи" отмечен
         self.assertContains(response, "checked")
 
-        # Проверяем, что выбрана правильная метка
         self.assertContains(
             response, f'<option value="{self.label1.id}" selected'
         )
 
     def test_filter_by_executor_none(self):
         """Тест: фильтрация задач без исполнителя"""
-        # Создаем задачу без исполнителя
         Task.objects.create(
             name="Task No Executor",
             description="No executor",
@@ -1455,20 +1414,17 @@ class TaskFilterTest(BaseTestCase):
 
         response = self.client.get(self.tasks_url)
 
-        # Проверяем наличие всех полей фильтрации
         self.assertContains(response, 'name="status"')
         self.assertContains(response, 'name="executor"')
         self.assertContains(response, 'name="label"')
         self.assertContains(response, 'name="self_tasks"')
 
-        # Проверяем наличие всех опций в выпадающих списках
         self.assertContains(response, "Status 1")
         self.assertContains(response, "Status 2")
 
-        # В списке исполнителей отображаются полные имена
-        self.assertContains(response, "Test User1")  # full name
-        self.assertContains(response, "Test User2")  # full name
-        self.assertContains(response, "Admin User")  # full name
+        self.assertContains(response, "Test User1")
+        self.assertContains(response, "Test User2")
+        self.assertContains(response, "Admin User")
 
         self.assertContains(response, "Label 1")
         self.assertContains(response, "Label 2")
