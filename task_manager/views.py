@@ -9,6 +9,7 @@ from .models import Label, Status, Task
 
 # URL константы
 LOGIN_URL = "/login/"
+USERS_URL = "/users/"
 
 # Сообщения об ошибках
 ERROR_NO_RIGHTS = "У вас нет прав для редактирования этого пользователя"
