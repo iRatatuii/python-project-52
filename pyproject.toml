@@ -52,12 +52,6 @@ dev = [
     "ruff>=0.15.4",
 ]
 
-[tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "hexlet_code.settings"
-python_files = ["tests.py", "test_*.py", "*_tests.py"]
-addopts = "--strict-markers --tb=short"
-testpaths = ["task_manager"]
-
 [tool.coverage.run]
 source = ["task_manager"]
 omit = ["*/migrations/*", "*/tests.py"]
