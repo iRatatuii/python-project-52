@@ -10,6 +10,12 @@ class IndexView(View):
         return render(request, "index.html")
 
 
+class UserListView(View):
+    def get(self, request, *args, **kwargs):
+        users = User.objects.all().order_by("id")
+        return render(request, "users.html", {"users": users})
+
+
 class UserLoginView(View):
     def get(self, request, *args, **kwargs):
         return render(request, "login.html")
