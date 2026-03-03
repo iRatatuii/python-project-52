@@ -6,6 +6,8 @@ from django.views import View
 from .. import constants
 from ..models import Label
 
+LABEL_CREATE_TEMPLATE = "labels/label_create.html"
+LABEL_UPDATE_TEMPLATE = "labels/label_update.html"
 
 class LabelListView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
@@ -15,18 +17,18 @@ class LabelListView(LoginRequiredMixin, View):
 
 class LabelCreateView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        return render(request, "labels/label_create.html")
+        return render(request, LABEL_CREATE_TEMPLATE)
 
     def post(self, request, *args, **kwargs):
         name = request.POST.get("name")
 
         if not name:
             messages.error(request, constants.ERROR_NAME_REQUIRED)
-            return render(request, "labels/label_create.html")
+            return render(request, LABEL_CREATE_TEMPLATE)
 
         if Label.objects.filter(name=name).exists():
             messages.error(request, constants.ERROR_LABEL_EXISTS)
-            return render(request, "labels/label_create.html")
+            return render(request, LABEL_CREATE_TEMPLATE)
 
         Label.objects.create(name=name)
         messages.success(request, constants.SUCCESS_LABEL_CREATED)
@@ -36,7 +38,7 @@ class LabelCreateView(LoginRequiredMixin, View):
 class LabelUpdateView(LoginRequiredMixin, View):
     def get(self, request, pk, *args, **kwargs):
         label = get_object_or_404(Label, pk=pk)
-        return render(request, "labels/label_update.html", {"label": label})
+        return render(request, LABEL_UPDATE_TEMPLATE, {"label": label})
 
     def post(self, request, pk, *args, **kwargs):
         label = get_object_or_404(Label, pk=pk)
@@ -44,11 +46,11 @@ class LabelUpdateView(LoginRequiredMixin, View):
 
         if not name:
             messages.error(request, constants.ERROR_NAME_REQUIRED)
-            return render(request, "labels/label_update.html", {"label": label})
+            return render(request, LABEL_UPDATE_TEMPLATE, {"label": label})
 
         if name != label.name and Label.objects.filter(name=name).exists():
             messages.error(request, constants.ERROR_LABEL_EXISTS)
-            return render(request, "labels/label_update.html", {"label": label})
+            return render(request, LABEL_UPDATE_TEMPLATE, {"label": label})
 
         label.name = name
         label.save()
