@@ -47,3 +47,6 @@ test-coverage:
 
 run:
 	uv run gunicorn -w 5 -b 0.0.0.0:$(PORT) hexlet_code.wsgi:application
+
+sonar:
+	sonar-scanner

@@ -31,3 +31,15 @@ uv.lock
 # Environment variables
 .env
 .env.local
+
+# Coverage reports
+coverage.xml
+htmlcov/
+.coverage
+.coverage.*
+*.coverage
+.coverage.*
+
+# SonarQube
+.sonar/
+.scannerwork/
