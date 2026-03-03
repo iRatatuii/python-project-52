@@ -17,7 +17,7 @@ lint-fix:
 	uv run ruff check --fix
 
 render-start:
-	uv run gunicorn task_manager.wsgi
+	uv run gunicorn hexlet_code.wsgi
 
 build:
 	./build.sh
