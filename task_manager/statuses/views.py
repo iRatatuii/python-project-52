@@ -36,7 +36,9 @@ class StatusCreateView(LoginRequiredMixin, View):
 class StatusUpdateView(LoginRequiredMixin, View):
     def get(self, request, pk, *args, **kwargs):
         status = get_object_or_404(Status, pk=pk)
-        return render(request, "statuses/status_update.html", {"status": status})
+        return render(request,
+                      "statuses/status_update.html",
+                      {"status": status})
 
     def post(self, request, pk, *args, **kwargs):
         status = get_object_or_404(Status, pk=pk)
@@ -44,11 +46,15 @@ class StatusUpdateView(LoginRequiredMixin, View):
 
         if not name:
             messages.error(request, constants.ERROR_NAME_REQUIRED)
-            return render(request, "statuses/status_update.html", {"status": status})
+            return render(request,
+                          "statuses/status_update.html",
+                          {"status": status})
 
         if name != status.name and Status.objects.filter(name=name).exists():
             messages.error(request, constants.ERROR_STATUS_EXISTS)
-            return render(request, "statuses/status_update.html", {"status": status})
+            return render(request,
+                          "statuses/status_update.html",
+                          {"status": status})
 
         status.name = name
         status.save()
@@ -65,7 +71,9 @@ class StatusDeleteView(LoginRequiredMixin, View):
             messages.error(request, constants.ERROR_CANNOT_DELETE_STATUS)
             return redirect(constants.STATUSES_URL)
 
-        return render(request, "statuses/status_delete.html", {"status": status})
+        return render(request,
+                      "statuses/status_delete.html",
+                      {"status": status})
 
     def post(self, request, pk, *args, **kwargs):
         status = get_object_or_404(Status, pk=pk)

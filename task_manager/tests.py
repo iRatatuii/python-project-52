@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.messages import get_messages
 from django.test import Client, TestCase
 
+from task_manager import constants
 from task_manager.models import Label, Status, Task
 
 # nosec - тестовые учетные данные
@@ -59,7 +60,7 @@ class UserRegistrationTest(BaseTestCase):
 
         messages = list(get_messages(response.wsgi_request))
         self.assertEqual(len(messages), 1)
-        self.assertIn("Регистрация прошла успешно", str(messages[0]))
+        self.assertIn(constants.SUCCESS_REGISTRATION, str(messages[0]))
 
     def test_user_registration_password_mismatch(self):
         response = self.client.post(
@@ -74,12 +75,12 @@ class UserRegistrationTest(BaseTestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "registration.html")
+        self.assertTemplateUsed(response, "users/registration.html")
         self.assertFalse(User.objects.filter(username="newuser").exists())
 
         messages = list(get_messages(response.wsgi_request))
         self.assertTrue(
-            any("Пароли не совпадают" in str(msg) for msg in messages)
+            any(constants.ERROR_PWD_MISMATCH in str(msg) for msg in messages)
         )
 
     def test_user_registration_short_password(self):
@@ -99,7 +100,7 @@ class UserRegistrationTest(BaseTestCase):
 
         messages = list(get_messages(response.wsgi_request))
         self.assertTrue(
-            any("минимум 3 символа" in str(msg) for msg in messages)
+            any(constants.ERROR_PWD_SHORT in str(msg) for msg in messages)
         )
 
     def test_user_registration_duplicate_username(self):
@@ -116,7 +117,9 @@ class UserRegistrationTest(BaseTestCase):
 
         self.assertEqual(response.status_code, 200)
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("уже существует" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(constants.ERROR_USERNAME_EXISTS in str(msg) for msg in messages)
+        )
 
 
 class UserLoginTest(BaseTestCase):
@@ -152,7 +155,7 @@ class UserLoginTest(BaseTestCase):
         messages = list(get_messages(response.wsgi_request))
         self.assertTrue(
             any(
-                "Неверное имя пользователя или пароль" in str(msg)
+                constants.ERROR_INVALID_CREDENTIALS in str(msg)
                 for msg in messages
             )
         )
@@ -184,7 +187,7 @@ class UserUpdateTest(BaseTestCase):
         self.client.login(username="testuser1", password="testpass123")  # nosec
         response = self.client.get(self.update_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "user_update.html")
+        self.assertTemplateUsed(response, "users/user_update.html")
 
     def test_user_update_success(self):
         self.client.login(username="testuser1", password="testpass123")  # nosec
@@ -240,7 +243,9 @@ class UserUpdateTest(BaseTestCase):
         self.assertRedirects(response, "/users/")
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("нет прав" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(constants.ERROR_NO_RIGHTS in str(msg) for msg in messages)
+        )
 
 
 class UserDeleteTest(BaseTestCase):
@@ -259,7 +264,7 @@ class UserDeleteTest(BaseTestCase):
         )
         response = self.client.get(self.delete_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "user_delete.html")
+        self.assertTemplateUsed(response, "users/user_delete.html")
 
     def test_user_delete_success(self):
         self.client.login(username="testuser1", password="testpass123")
@@ -277,7 +282,9 @@ class UserDeleteTest(BaseTestCase):
         self.assertTrue(User.objects.filter(id=self.user2.id).exists())
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("нет прав" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(constants.ERROR_NO_RIGHTS in str(msg) for msg in messages)
+        )
 
 
 class UserListViewTest(BaseTestCase):
@@ -288,7 +295,7 @@ class UserListViewTest(BaseTestCase):
     def test_users_list_public_access(self):
         response = self.client.get(self.users_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "users.html")
+        self.assertTemplateUsed(response, "users/users.html")
 
     def test_users_list_contains_all_users(self):
         response = self.client.get(self.users_url)
@@ -353,7 +360,9 @@ class LogoutTest(BaseTestCase):
         self.assertFalse(response.wsgi_request.user.is_authenticated)
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("вышли из системы" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(constants.SUCCESS_LOGOUT in str(msg) for msg in messages)
+        )
 
     def test_logout_get(self):
         response = self.client.get(self.logout_url)
@@ -429,7 +438,7 @@ class StatusCRUDTest(BaseTestCase):
         """Тест: список статусов доступен авторизованному пользователю"""
         response = self.client.get(self.statuses_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "statuses.html")
+        self.assertTemplateUsed(response, "statuses/statuses.html")
         self.assertContains(response, "Test Status")
 
     def test_status_list_view_unauthenticated(self):
@@ -442,7 +451,7 @@ class StatusCRUDTest(BaseTestCase):
         """Тест: форма создания статуса доступна"""
         response = self.client.get(self.status_create_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "status_create.html")
+        self.assertTemplateUsed(response, "statuses/status_create.html")
 
     def test_status_create_success(self):
         """Тест: успешное создание статуса"""
@@ -454,7 +463,11 @@ class StatusCRUDTest(BaseTestCase):
         self.assertTrue(Status.objects.filter(name="New Status").exists())
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("успешно создан" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(
+                constants.SUCCESS_STATUS_CREATED in str(msg) for msg in messages
+            )
+        )
 
     def test_status_create_duplicate(self):
         """Тест: создание статуса с существующим именем"""
@@ -463,10 +476,12 @@ class StatusCRUDTest(BaseTestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "status_create.html")
+        self.assertTemplateUsed(response, "statuses/status_create.html")
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("уже существует" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(constants.ERROR_STATUS_EXISTS in str(msg) for msg in messages)
+        )
 
     def test_status_create_empty_name(self):
         """Тест: создание статуса с пустым именем"""
@@ -475,13 +490,15 @@ class StatusCRUDTest(BaseTestCase):
         self.assertEqual(response.status_code, 200)
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("обязательно" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(constants.ERROR_NAME_REQUIRED in str(msg) for msg in messages)
+        )
 
     def test_status_update_view_get(self):
         """Тест: форма редактирования статуса доступна"""
         response = self.client.get(self.status_update_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "status_update.html")
+        self.assertTemplateUsed(response, "statuses/status_update.html")
         self.assertContains(response, "Test Status")
 
     def test_status_update_success(self):
@@ -495,7 +512,11 @@ class StatusCRUDTest(BaseTestCase):
         self.assertEqual(self.status.name, "Updated Status")
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("успешно изменен" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(
+                constants.SUCCESS_STATUS_UPDATED in str(msg) for msg in messages
+            )
+        )
 
     def test_status_update_duplicate(self):
         """Тест: обновление статуса на существующее имя"""
@@ -510,13 +531,15 @@ class StatusCRUDTest(BaseTestCase):
         self.assertEqual(self.status.name, "Test Status")
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("уже существует" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(constants.ERROR_STATUS_EXISTS in str(msg) for msg in messages)
+        )
 
     def test_status_delete_view_get(self):
         """Тест: страница подтверждения удаления доступна"""
         response = self.client.get(self.status_delete_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "status_delete.html")
+        self.assertTemplateUsed(response, "statuses/status_delete.html")
         self.assertContains(response, "Test Status")
 
     def test_status_delete_success(self):
@@ -527,11 +550,14 @@ class StatusCRUDTest(BaseTestCase):
         self.assertFalse(Status.objects.filter(id=self.status.id).exists())
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("успешно удален" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(
+                constants.SUCCESS_STATUS_DELETED in str(msg) for msg in messages
+            )
+        )
 
     def test_status_delete_with_tasks(self):
         """Тест: нельзя удалить статус, связанный с задачами"""
-        # Создаем задачу с этим статусом
         Task.objects.create(
             name="Test Task", status=self.status, author=self.user1
         )
@@ -543,14 +569,16 @@ class StatusCRUDTest(BaseTestCase):
 
         messages = list(get_messages(response.wsgi_request))
         self.assertTrue(
-            any("используется в задачах" in str(msg) for msg in messages)
+            any(
+                constants.ERROR_CANNOT_DELETE_STATUS in str(msg)
+                for msg in messages
+            )
         )
 
     def test_status_list_requires_login(self):
         """Тест: все view статусов требуют авторизации"""
         self.client.logout()
 
-        # Проверяем все URL
         urls = [
             "/statuses/",
             "/statuses/create/",
@@ -600,7 +628,6 @@ class UserDeleteWithTasksTest(BaseTestCase):
         super().setUp()
         self.status = Status.objects.create(name="Test Status")
 
-        # Создаем задачу, где user1 является автором
         self.task = Task.objects.create(
             name="Test Task",
             description="Test Description",
@@ -621,13 +648,11 @@ class UserDeleteWithTasksTest(BaseTestCase):
 
         messages = list(get_messages(response.wsgi_request))
         message_text = " ".join([str(msg) for msg in messages])
-        self.assertIn(
-            "Невозможно удалить пользователя, потому что он связан с задачами",
-            message_text,
-        )
+        self.assertIn(constants.ERROR_CANNOT_DELETE_USER, message_text)
 
     def test_cannot_delete_user_with_executed_tasks(self):
-        """Тест: нельзя удалить пользователя, который является исполнителем задач"""
+        """Тест: нельзя удалить пользователя, который является 
+        исполнителем задач"""
         self.client.login(username="testuser2", password="testpass123")
         delete_url = f"/users/{self.user2.id}/delete/"
 
@@ -638,24 +663,21 @@ class UserDeleteWithTasksTest(BaseTestCase):
 
         messages = list(get_messages(response.wsgi_request))
         message_text = " ".join([str(msg) for msg in messages])
-        self.assertIn(
-            "Невозможно удалить пользователя, потому что он связан с задачами",
-            message_text,
-        )
+        self.assertIn(constants.ERROR_CANNOT_DELETE_USER, message_text)
 
     def test_admin_can_delete_user_with_tasks(self):
-        """Тест: админ НЕ может удалить пользователя с задачами (согласно бизнес-логике)"""
-        self.client.login(username='adminuser', password='testpass123') # nosec
-        delete_url = f'/users/{self.user1.id}/delete/'
-        
+        """Тест: админ НЕ может удалить пользователя с задачами"""
+        self.client.login(username="adminuser", password="testpass123")
+        delete_url = f"/users/{self.user1.id}/delete/"
+
         response = self.client.post(delete_url)
-        
-        self.assertRedirects(response, '/users/')
+
+        self.assertRedirects(response, "/users/")
         self.assertTrue(User.objects.filter(id=self.user1.id).exists())
-        
+
         messages = list(get_messages(response.wsgi_request))
-        message_text = ' '.join([str(msg) for msg in messages])
-        self.assertIn('Невозможно удалить пользователя, потому что он связан с задачами', message_text)
+        message_text = " ".join([str(msg) for msg in messages])
+        self.assertIn(constants.ERROR_CANNOT_DELETE_USER, message_text)
 
 
 class TaskCRUDTest(BaseTestCase):
@@ -686,7 +708,7 @@ class TaskCRUDTest(BaseTestCase):
         """Тест: список задач доступен авторизованному пользователю"""
         response = self.client.get(self.tasks_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "tasks.html")
+        self.assertTemplateUsed(response, "tasks/tasks.html")
         self.assertContains(response, "Test Task")
 
     def test_task_list_view_unauthenticated(self):
@@ -699,7 +721,7 @@ class TaskCRUDTest(BaseTestCase):
         """Тест: форма создания задачи доступна"""
         response = self.client.get(self.task_create_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "task_create.html")
+        self.assertTemplateUsed(response, "tasks/task_create.html")
         self.assertContains(response, "Test Status")
         self.assertContains(response, "Label 1")
         self.assertContains(response, "Label 2")
@@ -727,7 +749,9 @@ class TaskCRUDTest(BaseTestCase):
         self.assertEqual(task.labels.count(), 2)
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("успешно создана" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(constants.SUCCESS_TASK_CREATED in str(msg) for msg in messages)
+        )
 
     def test_task_create_without_executor(self):
         """Тест: создание задачи без исполнителя"""
@@ -763,7 +787,9 @@ class TaskCRUDTest(BaseTestCase):
         self.assertRedirects(response, "/tasks/create/")
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("обязательно" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(constants.ERROR_NAME_REQUIRED in str(msg) for msg in messages)
+        )
 
     def test_task_create_without_status(self):
         """Тест: создание задачи без статуса"""
@@ -781,14 +807,14 @@ class TaskCRUDTest(BaseTestCase):
 
         messages = list(get_messages(response.wsgi_request))
         self.assertTrue(
-            any("Статус обязателен" in str(msg) for msg in messages)
+            any(constants.ERROR_STATUS_REQUIRED in str(msg) for msg in messages)
         )
 
     def test_task_detail_view(self):
         """Тест: просмотр задачи"""
         response = self.client.get(self.task_detail_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "task_detail.html")
+        self.assertTemplateUsed(response, "tasks/task_detail.html")
         self.assertContains(response, "Test Task")
         self.assertContains(response, "Test Description")
         self.assertContains(response, "Test Status")
@@ -798,7 +824,7 @@ class TaskCRUDTest(BaseTestCase):
         """Тест: форма редактирования задачи доступна"""
         response = self.client.get(self.task_update_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "task_update.html")
+        self.assertTemplateUsed(response, "tasks/task_update.html")
         self.assertContains(response, "Test Task")
         self.assertContains(response, "Test Status")
 
@@ -825,7 +851,9 @@ class TaskCRUDTest(BaseTestCase):
         self.assertEqual(self.task.labels.first(), self.label2)
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("успешно изменена" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(constants.SUCCESS_TASK_UPDATED in str(msg) for msg in messages)
+        )
 
     def test_task_update_by_non_author(self):
         """Тест: не автор не может редактировать задачу"""
@@ -850,13 +878,17 @@ class TaskCRUDTest(BaseTestCase):
         self.assertEqual(self.task.name, "Test Task")
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("только её автор" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(
+                constants.ERROR_TASK_EDIT_RIGHTS in str(msg) for msg in messages
+            )
+        )
 
     def test_task_delete_view_get(self):
         """Тест: страница подтверждения удаления доступна автору"""
         response = self.client.get(self.task_delete_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "task_delete.html")
+        self.assertTemplateUsed(response, "tasks/task_delete.html")
         self.assertContains(response, "Test Task")
 
     def test_task_delete_success(self):
@@ -867,7 +899,9 @@ class TaskCRUDTest(BaseTestCase):
         self.assertFalse(Task.objects.filter(id=self.task.id).exists())
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("успешно удалена" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(constants.SUCCESS_TASK_DELETED in str(msg) for msg in messages)
+        )
 
     def test_task_delete_by_non_author(self):
         """Тест: не автор не может удалить задачу"""
@@ -880,7 +914,12 @@ class TaskCRUDTest(BaseTestCase):
         self.assertTrue(Task.objects.filter(id=self.task.id).exists())
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("только её автор" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(
+                constants.ERROR_TASK_DELETE_RIGHTS in str(msg)
+                for msg in messages
+            )
+        )
 
     def test_task_filter_by_status(self):
         """Тест: фильтрация задач по статусу"""
@@ -930,7 +969,7 @@ class LabelCRUDTest(BaseTestCase):
         """Тест: список меток доступен авторизованному пользователю"""
         response = self.client.get(self.labels_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "labels.html")
+        self.assertTemplateUsed(response, "labels/labels.html")
         self.assertContains(response, "Test Label")
 
     def test_label_list_view_unauthenticated(self):
@@ -943,7 +982,7 @@ class LabelCRUDTest(BaseTestCase):
         """Тест: форма создания метки доступна"""
         response = self.client.get(self.label_create_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "label_create.html")
+        self.assertTemplateUsed(response, "labels/label_create.html")
 
     def test_label_create_success(self):
         """Тест: успешное создание метки"""
@@ -955,7 +994,9 @@ class LabelCRUDTest(BaseTestCase):
         self.assertTrue(Label.objects.filter(name="New Label").exists())
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("успешно создана" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(constants.SUCCESS_LABEL_CREATED in str(msg) for msg in messages)
+        )
 
     def test_label_create_duplicate(self):
         """Тест: создание метки с существующим именем"""
@@ -964,10 +1005,12 @@ class LabelCRUDTest(BaseTestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "label_create.html")
+        self.assertTemplateUsed(response, "labels/label_create.html")
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("уже существует" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(constants.ERROR_LABEL_EXISTS in str(msg) for msg in messages)
+        )
 
     def test_label_create_empty_name(self):
         """Тест: создание метки с пустым именем"""
@@ -977,14 +1020,14 @@ class LabelCRUDTest(BaseTestCase):
 
         messages = list(get_messages(response.wsgi_request))
         self.assertTrue(
-            any("Имя метки обязательно" in str(msg) for msg in messages)
+            any(constants.ERROR_NAME_REQUIRED in str(msg) for msg in messages)
         )
 
     def test_label_update_view_get(self):
         """Тест: форма редактирования метки доступна"""
         response = self.client.get(self.label_update_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "label_update.html")
+        self.assertTemplateUsed(response, "labels/label_update.html")
         self.assertContains(response, "Test Label")
 
     def test_label_update_success(self):
@@ -998,7 +1041,9 @@ class LabelCRUDTest(BaseTestCase):
         self.assertEqual(self.label.name, "Updated Label")
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("успешно изменена" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(constants.SUCCESS_LABEL_UPDATED in str(msg) for msg in messages)
+        )
 
     def test_label_update_duplicate(self):
         """Тест: обновление метки на существующее имя"""
@@ -1013,13 +1058,15 @@ class LabelCRUDTest(BaseTestCase):
         self.assertEqual(self.label.name, "Test Label")
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("уже существует" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(constants.ERROR_LABEL_EXISTS in str(msg) for msg in messages)
+        )
 
     def test_label_delete_view_get(self):
         """Тест: страница подтверждения удаления доступна"""
         response = self.client.get(self.label_delete_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "label_delete.html")
+        self.assertTemplateUsed(response, "labels/label_delete.html")
         self.assertContains(response, "Test Label")
 
     def test_label_delete_success(self):
@@ -1030,7 +1077,9 @@ class LabelCRUDTest(BaseTestCase):
         self.assertFalse(Label.objects.filter(id=self.label.id).exists())
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("успешно удалена" in str(msg) for msg in messages))
+        self.assertTrue(
+            any(constants.SUCCESS_LABEL_DELETED in str(msg) for msg in messages)
+        )
 
     def test_label_delete_with_tasks(self):
         """Тест: нельзя удалить метку, связанную с задачами"""
@@ -1047,7 +1096,10 @@ class LabelCRUDTest(BaseTestCase):
 
         messages = list(get_messages(response.wsgi_request))
         self.assertTrue(
-            any("используется в задачах" in str(msg) for msg in messages)
+            any(
+                constants.ERROR_CANNOT_DELETE_LABEL in str(msg)
+                for msg in messages
+            )
         )
 
     def test_label_list_requires_login(self):
@@ -1182,7 +1234,7 @@ class LabelPermissionTest(BaseTestCase):
 
     def test_authenticated_user_can_access_label_pages(self):
         """Тест: авторизованный пользователь может зайти на страницы меток"""
-        self.client.login(username="testuser1", password="testpass123")
+        self.client.login(username="testuser1", password="testpass123")  # nosec
         label = Label.objects.create(name="Test Label")
 
         urls = [
@@ -1202,16 +1254,13 @@ class TaskFilterTest(BaseTestCase):
         super().setUp()
         self.client.login(username="testuser1", password="testpass123")  # nosec
 
-        # Создаем статусы
         self.status1 = Status.objects.create(name="Status 1")
         self.status2 = Status.objects.create(name="Status 2")
 
-        # Создаем метки
         self.label1 = Label.objects.create(name="Label 1")
         self.label2 = Label.objects.create(name="Label 2")
         self.label3 = Label.objects.create(name="Label 3")
 
-        # Создаем задачи
         self.task1 = Task.objects.create(
             name="Task 1",
             description="Description 1",
@@ -1310,7 +1359,7 @@ class TaskFilterTest(BaseTestCase):
         self.assertNotContains(response, "Task 4")
 
         self.client.logout()
-        self.client.login(username="testuser2", password="testpass123")
+        self.client.login(username="testuser2", password="testpass123")  # nosec
         response = self.client.get(f"{self.tasks_url}?self_tasks=on")
         self.assertContains(response, "Task 2")
         self.assertNotContains(response, "Task 1")
@@ -1318,7 +1367,7 @@ class TaskFilterTest(BaseTestCase):
         self.assertNotContains(response, "Task 4")
 
         self.client.logout()
-        self.client.login(username="adminuser", password="testpass123")
+        self.client.login(username="adminuser", password="testpass123")  # nosec
         response = self.client.get(f"{self.tasks_url}?self_tasks=on")
         self.assertContains(response, "Task 4")
         self.assertNotContains(response, "Task 1")
@@ -1377,26 +1426,13 @@ class TaskFilterTest(BaseTestCase):
         self.assertContains(
             response, f'<option value="{self.status1.id}" selected'
         )
-
         self.assertContains(response, "checked")
-
         self.assertContains(
             response, f'<option value="{self.label1.id}" selected'
         )
 
-    def test_filter_by_executor_none(self):
-        """Тест: фильтрация задач без исполнителя"""
-        Task.objects.create(
-            name="Task No Executor",
-            description="No executor",
-            status=self.status1,
-            author=self.user1,
-            executor=None,
-        )
-
     def test_filter_form_display(self):
         """Тест: форма фильтрации отображается корректно"""
-
         response = self.client.get(self.tasks_url)
 
         self.assertContains(response, 'name="status"')
