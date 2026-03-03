@@ -1,3 +1,5 @@
+PORT ?= 8000
+
 install:
 	uv sync
 
@@ -17,7 +19,7 @@ lint-fix:
 	uv run ruff check --fix
 
 render-start:
-	uv run gunicorn hexlet_code.wsgi
+	gunicorn -w 5 -b 0.0.0.0:$(PORT) hexlet_code.wsgi:application
 
 build:
 	./build.sh
@@ -36,3 +38,6 @@ test-verbose:
 
 test-coverage:
 	uv run pytest --ds=hexlet_code.settings --reuse-db --cov=task_manager --cov-report=term --cov-report=html
+
+run:
+	uv run gunicorn -w 5 -b 0.0.0.0:$(PORT) hexlet_code.wsgi:application
