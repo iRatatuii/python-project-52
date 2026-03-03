@@ -2,7 +2,10 @@ PORT ?= 8000
 
 install:
 	uv sync
-	
+
+install-deps:
+	uv sync
+
 start-server:
 	uv run python manage.py runserver 0.0.0.0:3000
 
