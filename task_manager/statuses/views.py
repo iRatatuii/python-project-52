@@ -6,6 +6,9 @@ from django.views import View
 from .. import constants
 from ..models import Status
 
+STATUS_CREATE_TEMPLATE = "statuses/status_create.html"
+STATUS_UPDATE_TEMPLATE = "statuses/status_update.html"
+
 
 class StatusListView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
@@ -15,18 +18,18 @@ class StatusListView(LoginRequiredMixin, View):
 
 class StatusCreateView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        return render(request, "statuses/status_create.html")
+        return render(request, STATUS_CREATE_TEMPLATE)
 
     def post(self, request, *args, **kwargs):
         name = request.POST.get("name")
 
         if not name:
             messages.error(request, constants.ERROR_NAME_REQUIRED)
-            return render(request, "statuses/status_create.html")
+            return render(request, STATUS_CREATE_TEMPLATE)
 
         if Status.objects.filter(name=name).exists():
             messages.error(request, constants.ERROR_STATUS_EXISTS)
-            return render(request, "statuses/status_create.html")
+            return render(request, STATUS_CREATE_TEMPLATE)
 
         Status.objects.create(name=name)
         messages.success(request, constants.SUCCESS_STATUS_CREATED)
@@ -36,9 +39,7 @@ class StatusCreateView(LoginRequiredMixin, View):
 class StatusUpdateView(LoginRequiredMixin, View):
     def get(self, request, pk, *args, **kwargs):
         status = get_object_or_404(Status, pk=pk)
-        return render(request,
-                      "statuses/status_update.html",
-                      {"status": status})
+        return render(request, STATUS_UPDATE_TEMPLATE, {"status": status})
 
     def post(self, request, pk, *args, **kwargs):
         status = get_object_or_404(Status, pk=pk)
@@ -46,15 +47,11 @@ class StatusUpdateView(LoginRequiredMixin, View):
 
         if not name:
             messages.error(request, constants.ERROR_NAME_REQUIRED)
-            return render(request,
-                          "statuses/status_update.html",
-                          {"status": status})
+            return render(request, STATUS_UPDATE_TEMPLATE, {"status": status})
 
         if name != status.name and Status.objects.filter(name=name).exists():
             messages.error(request, constants.ERROR_STATUS_EXISTS)
-            return render(request,
-                          "statuses/status_update.html",
-                          {"status": status})
+            return render(request, STATUS_UPDATE_TEMPLATE, {"status": status})
 
         status.name = name
         status.save()
