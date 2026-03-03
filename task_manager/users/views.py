@@ -38,12 +38,8 @@ class UserLoginView(View):
 
 
 class UserLogoutView(View):
-    def post(self, request, *args, **kwargs):
-        logout(request)
-        messages.success(request, constants.SUCCESS_LOGOUT)
-        return redirect("/")
-
-    def get(self, request, *args, **kwargs):
+    def dispatch(self, request, *args, **kwargs):
+        """Обрабатывает и GET и POST запросы одинаково"""
         logout(request)
         messages.success(request, constants.SUCCESS_LOGOUT)
         return redirect("/")
