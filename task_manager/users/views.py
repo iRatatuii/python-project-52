@@ -164,8 +164,9 @@ class UserUpdateView(LoginRequiredMixin, View):
 
         if password_changed:
             messages.success(request, constants.SUCCESS_USER_UPDATED)
-            logout(request)
-            return redirect(LOGIN_URL)
+            self._update_user_data(user, data)
+            return redirect(USERS_URL)
+        
         else:
             messages.success(request, constants.SUCCESS_USER_UPDATED)
             return redirect(USERS_URL)
