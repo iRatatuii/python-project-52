@@ -64,13 +64,8 @@ class StatusDeleteView(LoginRequiredMixin, View):
     def get(self, request, pk, *args, **kwargs):
         status = get_object_or_404(Status, pk=pk)
 
-        if status.tasks.exists():
-            messages.error(request, constants.ERROR_CANNOT_DELETE_STATUS)
-            return redirect(constants.STATUSES_URL)
-
-        return render(request,
-                      "statuses/status_delete.html",
-                      {"status": status})
+        return render(request, "statuses/status_delete.html",
+                    {"status": status})
 
     def post(self, request, pk, *args, **kwargs):
         status = get_object_or_404(Status, pk=pk)
