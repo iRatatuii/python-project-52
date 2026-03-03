@@ -43,3 +43,4 @@ htmlcov/
 # SonarQube
 .sonar/
 .scannerwork/
+.sonarlint/
