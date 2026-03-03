@@ -29,7 +29,7 @@ ERROR_STATUS_EXISTS = "Статус с таким именем уже сущес
 ERROR_LABEL_EXISTS = "Метка с таким именем уже существует"
 
 # Сообщения об успехе
-SUCCESS_REGISTRATION = "Регистрация прошла успешно"
+SUCCESS_REGISTRATION = "Пользователь успешно зарегистрирован"
 SUCCESS_LOGIN = "Вы успешно вошли в систему"
 SUCCESS_LOGOUT = "Вы успешно вышли из системы"
 SUCCESS_USER_UPDATED = "Пользователь успешно обновлен"
