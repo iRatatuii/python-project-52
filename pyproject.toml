@@ -43,7 +43,7 @@ select = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["hexlet_code", "task_manager"]
+known-first-party = ["task_manager"]
 
 [dependency-groups]
 dev = [

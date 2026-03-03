@@ -65,7 +65,7 @@ ROLLBAR = {
     "root": BASE_DIR,
 }
 
-ROOT_URLCONF = 'hexlet_code.urls'
+ROOT_URLCONF = "task_manager.urls"
 
 TEMPLATES = [
     {
@@ -82,7 +82,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'hexlet_code.wsgi.application'
+WSGI_APPLICATION = "task_manager.wsgi.application"
 
 
 # Database
