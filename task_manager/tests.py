@@ -221,7 +221,7 @@ class UserUpdateTest(BaseTestCase):
             },
         )
 
-        self.assertRedirects(response, "/login/")
+        self.assertRedirects(response, "/users/")
 
         login_success = self.client.login(
             username="testuser1",
