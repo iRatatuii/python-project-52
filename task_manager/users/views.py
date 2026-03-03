@@ -89,7 +89,7 @@ class UserCreateView(View):
             last_name=last_name,
         )
 
-        messages.success(request, "Регистрация прошла успешно")
+        messages.success(request, constants.SUCCESS_REGISTRATION)
         return redirect("/login/")
 
 
