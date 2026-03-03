@@ -50,14 +50,14 @@ jobs:
       run: uv run pytest --ds=task_manager.settings --cov=task_manager --cov-report=xml --cov-report=term
       
     - name: Upload coverage to SonarCloud
-      uses: sonarsource/sonarcloud-github-action@ba3875ecf642b2129de2b589510c81a8b53dbf4e
+      uses: sonarsource/sonarcloud-github-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       if: env.SONAR_TOKEN != null
       
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@ab904c41d6ece82784817410c45d8b8c02684457
+      uses: codecov/codecov-action@v3
       with:
         file: ./coverage.xml
         flags: unittests
@@ -73,7 +73,7 @@ jobs:
     - uses: actions/checkout@v3
     
     - name: Deploy to Render
-      uses: johnbeynon/render-deploy-action@a0588f9aca995a15d69a72cb2bfbf37c12e5b540
+      uses: johnbeynon/render-deploy-action@v0.0.8
       with:
         service-id: ${{ secrets.RENDER_SERVICE_ID }}
         api-key: ${{ secrets.RENDER_API_KEY }}
