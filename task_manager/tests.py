@@ -1,4 +1,4 @@
-# nosec - тестовые учетные данные
+# NOSONAR - тестовые учетные данные
 
 from django.contrib.auth.models import User
 from django.contrib.messages import get_messages
@@ -7,7 +7,7 @@ from django.test import Client, TestCase
 from task_manager import constants
 from task_manager.models import Label, Status, Task
 
-# nosec - тестовые учетные данные
+# NOSONAR - тестовые учетные данные
 
 
 class BaseTestCase(TestCase):
@@ -15,19 +15,19 @@ class BaseTestCase(TestCase):
         self.client = Client()
         self.user1 = User.objects.create_user(
             username="testuser1",
-            password="testpass123",  # nosec
+            password="testpass123",  # NOSONAR
             first_name="Test",
             last_name="User1",
         )
         self.user2 = User.objects.create_user(
             username="testuser2",
-            password="testpass123",  # nosec
+            password="testpass123",  # NOSONAR
             first_name="Test",
             last_name="User2",
         )
         self.admin = User.objects.create_superuser(
             username="adminuser",
-            password="testpass123",  # nosec
+            password="testpass123",  # NOSONAR
             first_name="Admin",
             last_name="User",
             email="admin@example.com",
@@ -50,8 +50,8 @@ class UserRegistrationTest(BaseTestCase):
                 "first_name": "New",
                 "last_name": "User",
                 "username": "newuser",
-                "password1": "testpass123",  # nosec
-                "password2": "testpass123",  # nosec
+                "password1": "testpass123",  # NOSONAR
+                "password2": "testpass123",  # NOSONAR
             },
         )
 
@@ -69,8 +69,8 @@ class UserRegistrationTest(BaseTestCase):
                 "first_name": "New",
                 "last_name": "User",
                 "username": "newuser",
-                "password1": "pass123",  # nosec
-                "password2": "pass456",  # nosec
+                "password1": "pass123",  # NOSONAR
+                "password2": "pass456",  # NOSONAR
             },
         )
 
@@ -90,8 +90,8 @@ class UserRegistrationTest(BaseTestCase):
                 "first_name": "New",
                 "last_name": "User",
                 "username": "newuser",
-                "password1": "12",  # nosec
-                "password2": "12",  # nosec
+                "password1": "12",  # NOSONAR
+                "password2": "12",  # NOSONAR
             },
         )
 
@@ -110,8 +110,8 @@ class UserRegistrationTest(BaseTestCase):
                 "first_name": "New",
                 "last_name": "User",
                 "username": "testuser1",
-                "password1": "newpass123",  # nosec
-                "password2": "newpass123",  # nosec
+                "password1": "newpass123",  # NOSONAR
+                "password2": "newpass123",  # NOSONAR
             },
         )
 
@@ -136,7 +136,7 @@ class UserLoginTest(BaseTestCase):
             self.login_url,
             {
                 "username": "testuser1",
-                "password": "testpass123",  # nosec
+                "password": "testpass123",  # NOSONAR
             },
         )
 
@@ -146,7 +146,7 @@ class UserLoginTest(BaseTestCase):
     def test_login_invalid_credentials(self):
         response = self.client.post(
             self.login_url,
-            {"username": "testuser1", "password": "wrongpass"},  # nosec
+            {"username": "testuser1", "password": "wrongpass"},  # NOSONAR
         )
 
         self.assertEqual(response.status_code, 200)
@@ -165,7 +165,7 @@ class UserLoginTest(BaseTestCase):
             self.login_url,
             {
                 "username": "nonexistent",
-                "password": "pass123",  # nosec
+                "password": "pass123",  # NOSONAR
             },
         )
 
@@ -173,7 +173,7 @@ class UserLoginTest(BaseTestCase):
         self.assertFalse(response.wsgi_request.user.is_authenticated)
 
 
-# nosec
+# NOSONAR
 class UserUpdateTest(BaseTestCase):
     def setUp(self):
         super().setUp()
@@ -184,21 +184,21 @@ class UserUpdateTest(BaseTestCase):
         self.assertRedirects(response, f"/login/?next={self.update_url}")
 
     def test_update_page_status_code_authenticated(self):
-        self.client.login(username="testuser1", password="testpass123")  # nosec
+        self.client.login(username="testuser1", password="testpass123")  # NOSONAR
         response = self.client.get(self.update_url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "users/user_update.html")
 
     def test_user_update_success(self):
-        self.client.login(username="testuser1", password="testpass123")  # nosec
+        self.client.login(username="testuser1", password="testpass123")  # NOSONAR
         response = self.client.post(
             self.update_url,
             {
                 "first_name": "Updated",
                 "last_name": "Name",
                 "username": "testuser1",
-                "password1": "",  # nosec
-                "password2": "",  # nosec
+                "password1": "",  # NOSONAR
+                "password2": "",  # NOSONAR
             },
         )
 
@@ -208,16 +208,16 @@ class UserUpdateTest(BaseTestCase):
         self.assertEqual(self.user1.first_name, "Updated")
         self.assertEqual(self.user1.last_name, "Name")
 
-    def test_user_update_with_new_password(self):
-        self.client.login(username="testuser1", password="testpass123")  # nosec
+    def test_user_update_with_new_password(self): 
+        self.client.login(username="testuser1", password="testpass123")  # NOSONAR
         response = self.client.post(
             self.update_url,
             {
                 "first_name": "Updated",
                 "last_name": "Name",
                 "username": "testuser1",
-                "password1": "newpass123",  # nosec
-                "password2": "newpass123",  # nosec
+                "password1": "newpass123",  # NOSONAR
+                "password2": "newpass123",  # NOSONAR
             },
         )
 
@@ -225,18 +225,18 @@ class UserUpdateTest(BaseTestCase):
 
         login_success = self.client.login(
             username="testuser1",
-            password="testpass123",  # nosec
+            password="testpass123",  # NOSONAR
         )
         self.assertFalse(login_success)
 
         login_success = self.client.login(
             username="testuser1",
-            password="newpass123",  # nosec
+            password="newpass123",  # NOSONAR
         )
         self.assertTrue(login_success)
 
     def test_user_update_unauthorized(self):
-        self.client.login(username="testuser1", password="testpass123")  # nosec
+        self.client.login(username="testuser1", password="testpass123")  # NOSONAR
         other_update_url = f"/users/{self.user2.id}/update/"
         response = self.client.get(other_update_url)
 
@@ -260,21 +260,21 @@ class UserDeleteTest(BaseTestCase):
     def test_delete_page_status_code_authenticated(self):
         self.client.login(
             username="testuser1",
-            password="testpass123",  # nosec
+            password="testpass123",  # NOSONAR
         )
         response = self.client.get(self.delete_url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "users/user_delete.html")
 
     def test_user_delete_success(self):
-        self.client.login(username="testuser1", password="testpass123")
+        self.client.login(username="testuser1", password="testpass123") # NOSONAR
         response = self.client.post(self.delete_url)
 
         self.assertRedirects(response, "/users/")
         self.assertFalse(User.objects.filter(id=self.user1.id).exists())
 
     def test_user_delete_unauthorized(self):
-        self.client.login(username="testuser1", password="testpass123")
+        self.client.login(username="testuser1", password="testpass123") # NOSONAR
         other_delete_url = f"/users/{self.user2.id}/delete/"
         response = self.client.post(other_delete_url)
 
@@ -318,7 +318,7 @@ class UserListViewTest(BaseTestCase):
 class AdminUserTest(BaseTestCase):
     def setUp(self):
         super().setUp()
-        self.client.login(username="adminuser", password="testpass123")
+        self.client.login(username="adminuser", password="testpass123") # NOSONAR
 
     def test_admin_can_edit_any_user(self):
         update_url = f"/users/{self.user1.id}/update/"
@@ -331,8 +331,8 @@ class AdminUserTest(BaseTestCase):
                 "first_name": "AdminEdited",
                 "last_name": "User",
                 "username": self.user1.username,
-                "password1": "",  # nosec
-                "password2": "",  # nosec
+                "password1": "",  # NOSONAR
+                "password2": "",  # NOSONAR
             },
         )
 
@@ -352,7 +352,7 @@ class LogoutTest(BaseTestCase):
     def setUp(self):
         super().setUp()
         self.logout_url = "/logout/"
-        self.client.login(username="testuser1", password="testpass123")  # nosec
+        self.client.login(username="testuser1", password="testpass123")  # NOSONAR
 
     def test_logout_post(self):
         response = self.client.post(self.logout_url)
@@ -427,7 +427,7 @@ class TaskModelTest(BaseTestCase):
 class StatusCRUDTest(BaseTestCase):
     def setUp(self):
         super().setUp()
-        self.client.login(username="testuser1", password="testpass123")  # nosec
+        self.client.login(username="testuser1", password="testpass123")  # NOSONAR
         self.status = Status.objects.create(name="Test Status")
         self.statuses_url = "/statuses/"
         self.status_create_url = "/statuses/create/"
@@ -608,7 +608,7 @@ class StatusPermissionTest(BaseTestCase):
 
     def test_authenticated_user_can_access_status_pages(self):
         """Тест: авторизованный пользователь может зайти на страницы статусов"""
-        self.client.login(username="testuser1", password="testpass123")
+        self.client.login(username="testuser1", password="testpass123") # NOSONAR
         status = Status.objects.create(name="Test Status")
 
         urls = [
@@ -638,7 +638,7 @@ class UserDeleteWithTasksTest(BaseTestCase):
 
     def test_cannot_delete_user_with_authored_tasks(self):
         """Тест: нельзя удалить пользователя, который является автором задач"""
-        self.client.login(username="testuser1", password="testpass123")
+        self.client.login(username="testuser1", password="testpass123") # NOSONAR
         delete_url = f"/users/{self.user1.id}/delete/"
 
         response = self.client.post(delete_url)
@@ -653,7 +653,7 @@ class UserDeleteWithTasksTest(BaseTestCase):
     def test_cannot_delete_user_with_executed_tasks(self):
         """Тест: нельзя удалить пользователя, который является 
         исполнителем задач"""
-        self.client.login(username="testuser2", password="testpass123")
+        self.client.login(username="testuser2", password="testpass123") # NOSONAR
         delete_url = f"/users/{self.user2.id}/delete/"
 
         response = self.client.post(delete_url)
@@ -667,7 +667,7 @@ class UserDeleteWithTasksTest(BaseTestCase):
 
     def test_admin_can_delete_user_with_tasks(self):
         """Тест: админ НЕ может удалить пользователя с задачами"""
-        self.client.login(username="adminuser", password="testpass123")
+        self.client.login(username="adminuser", password="testpass123") # NOSONAR
         delete_url = f"/users/{self.user1.id}/delete/"
 
         response = self.client.post(delete_url)
@@ -683,7 +683,7 @@ class UserDeleteWithTasksTest(BaseTestCase):
 class TaskCRUDTest(BaseTestCase):
     def setUp(self):
         super().setUp()
-        self.client.login(username="testuser1", password="testpass123")  # nosec
+        self.client.login(username="testuser1", password="testpass123")  # NOSONAR
 
         self.status = Status.objects.create(name="Test Status")
         self.label1 = Label.objects.create(name="Label 1")
@@ -858,7 +858,7 @@ class TaskCRUDTest(BaseTestCase):
     def test_task_update_by_non_author(self):
         """Тест: не автор не может редактировать задачу"""
         self.client.logout()
-        self.client.login(username="testuser2", password="testpass123")  # nosec
+        self.client.login(username="testuser2", password="testpass123")  # NOSONAR
 
         response = self.client.get(self.task_update_url)
         self.assertRedirects(response, "/tasks/")
@@ -906,7 +906,7 @@ class TaskCRUDTest(BaseTestCase):
     def test_task_delete_by_non_author(self):
         """Тест: не автор не может удалить задачу"""
         self.client.logout()
-        self.client.login(username="testuser2", password="testpass123")
+        self.client.login(username="testuser2", password="testpass123")  # NOSONAR
 
         response = self.client.post(self.task_delete_url)
 
@@ -956,7 +956,7 @@ class TaskCRUDTest(BaseTestCase):
 class LabelCRUDTest(BaseTestCase):
     def setUp(self):
         super().setUp()
-        self.client.login(username="testuser1", password="testpass123")  # nosec
+        self.client.login(username="testuser1", password="testpass123")  # NOSONAR
 
         self.label = Label.objects.create(name="Test Label")
 
@@ -1121,7 +1121,7 @@ class LabelCRUDTest(BaseTestCase):
 class LabelInTaskTest(BaseTestCase):
     def setUp(self):
         super().setUp()
-        self.client.login(username="testuser1", password="testpass123")  # nosec
+        self.client.login(username="testuser1", password="testpass123")  # NOSONAR
 
         self.status = Status.objects.create(name="Test Status")
         self.label1 = Label.objects.create(name="Label 1")
@@ -1234,7 +1234,7 @@ class LabelPermissionTest(BaseTestCase):
 
     def test_authenticated_user_can_access_label_pages(self):
         """Тест: авторизованный пользователь может зайти на страницы меток"""
-        self.client.login(username="testuser1", password="testpass123")  # nosec
+        self.client.login(username="testuser1", password="testpass123")  # NOSONAR
         label = Label.objects.create(name="Test Label")
 
         urls = [
@@ -1252,7 +1252,7 @@ class LabelPermissionTest(BaseTestCase):
 class TaskFilterTest(BaseTestCase):
     def setUp(self):
         super().setUp()
-        self.client.login(username="testuser1", password="testpass123")  # nosec
+        self.client.login(username="testuser1", password="testpass123")  # NOSONAR
 
         self.status1 = Status.objects.create(name="Status 1")
         self.status2 = Status.objects.create(name="Status 2")
@@ -1359,7 +1359,7 @@ class TaskFilterTest(BaseTestCase):
         self.assertNotContains(response, "Task 4")
 
         self.client.logout()
-        self.client.login(username="testuser2", password="testpass123")  # nosec
+        self.client.login(username="testuser2", password="testpass123")  # NOSONAR
         response = self.client.get(f"{self.tasks_url}?self_tasks=on")
         self.assertContains(response, "Task 2")
         self.assertNotContains(response, "Task 1")
@@ -1367,7 +1367,7 @@ class TaskFilterTest(BaseTestCase):
         self.assertNotContains(response, "Task 4")
 
         self.client.logout()
-        self.client.login(username="adminuser", password="testpass123")  # nosec
+        self.client.login(username="adminuser", password="testpass123")  # NOSONAR
         response = self.client.get(f"{self.tasks_url}?self_tasks=on")
         self.assertContains(response, "Task 4")
         self.assertNotContains(response, "Task 1")
