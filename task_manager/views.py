@@ -551,16 +551,16 @@ class UserDeleteView(LoginRequiredMixin, View):
     def get(self, request, pk, *args, **kwargs):
         user = get_object_or_404(User, pk=pk)
 
-        if not request.user.is_superuser and request.user.id != user.id:
-            messages.error(
-                request, "У вас нет прав для удаления этого пользователя"
-            )
-            return redirect("/users/")
-
         if user.authored_tasks.exists() or user.executed_tasks.exists():
             messages.error(
                 request,
-                ERROR_NO_RIGHTS,
+                "Невозможно удалить пользователя, потому что он связан с задачами",
+            )
+            return redirect("/users/")
+
+        if not request.user.is_superuser and request.user.id != user.id:
+            messages.error(
+                request, "У вас нет прав для редактирования этого пользователя"
             )
             return redirect("/users/")
 
@@ -569,16 +569,17 @@ class UserDeleteView(LoginRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         user = get_object_or_404(User, pk=pk)
 
-        if not request.user.is_superuser and request.user.id != user.id:
-            messages.error(
-                request, "У вас нет прав для удаления этого пользователя"
-            )
-            return redirect("/users/")
-
         if user.authored_tasks.exists() or user.executed_tasks.exists():
             messages.error(
                 request,
-                ERROR_NO_RIGHTS,
+                "Невозможно удалить пользователя, потому что он связан с задачами",
+            )
+            return redirect("/users/")
+
+        # Потом проверяем права
+        if not request.user.is_superuser and request.user.id != user.id:
+            messages.error(
+                request, "У вас нет прав для редактирования этого пользователя"
             )
             return redirect("/users/")
 

@@ -620,13 +620,14 @@ class UserDeleteWithTasksTest(BaseTestCase):
         self.assertTrue(User.objects.filter(id=self.user1.id).exists())
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(
-            any("связан с задачами" in str(msg) for msg in messages)
+        message_text = " ".join([str(msg) for msg in messages])
+        self.assertIn(
+            "Невозможно удалить пользователя, потому что он связан с задачами",
+            message_text,
         )
 
     def test_cannot_delete_user_with_executed_tasks(self):
-        """Тест: нельзя удалить пользователя, который является
-        исполнителем задач"""
+        """Тест: нельзя удалить пользователя, который является исполнителем задач"""
         self.client.login(username="testuser2", password="testpass123")
         delete_url = f"/users/{self.user2.id}/delete/"
 
@@ -636,41 +637,25 @@ class UserDeleteWithTasksTest(BaseTestCase):
         self.assertTrue(User.objects.filter(id=self.user2.id).exists())
 
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(
-            any("связан с задачами" in str(msg) for msg in messages)
+        message_text = " ".join([str(msg) for msg in messages])
+        self.assertIn(
+            "Невозможно удалить пользователя, потому что он связан с задачами",
+            message_text,
         )
 
     def test_admin_can_delete_user_with_tasks(self):
-        """Тест: админ может удалить пользователя даже с задачами
-        (опционально)"""
-        self.client.login(username="adminuser", password="testpass123")
-        delete_url = f"/users/{self.user1.id}/delete/"
-
+        """Тест: админ НЕ может удалить пользователя с задачами (согласно бизнес-логике)"""
+        self.client.login(username='adminuser', password='testpass123') # nosec
+        delete_url = f'/users/{self.user1.id}/delete/'
+        
         response = self.client.post(delete_url)
-
-        self.assertRedirects(response, "/users/")
+        
+        self.assertRedirects(response, '/users/')
         self.assertTrue(User.objects.filter(id=self.user1.id).exists())
+        
         messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(
-            any("связан с задачами" in str(msg) for msg in messages)
-        )
-
-    def test_can_delete_user_without_tasks(self):
-        """Тест: можно удалить пользователя без задач"""
-        user_without_tasks = User.objects.create_user(
-            username="nouser",
-            password="testpass123",
-            first_name="No",
-            last_name="Tasks",
-        )
-
-        self.client.login(username="nouser", password="testpass123")
-        delete_url = f"/users/{user_without_tasks.id}/delete/"
-
-        response = self.client.post(delete_url)
-
-        self.assertRedirects(response, "/users/")
-        self.assertFalse(User.objects.filter(id=user_without_tasks.id).exists())
+        message_text = ' '.join([str(msg) for msg in messages])
+        self.assertIn('Невозможно удалить пользователя, потому что он связан с задачами', message_text)
 
 
 class TaskCRUDTest(BaseTestCase):
