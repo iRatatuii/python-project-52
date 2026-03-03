@@ -9,6 +9,7 @@ from ..models import Label
 LABEL_CREATE_TEMPLATE = "labels/label_create.html"
 LABEL_UPDATE_TEMPLATE = "labels/label_update.html"
 
+
 class LabelListView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         labels = Label.objects.all().order_by("id")
