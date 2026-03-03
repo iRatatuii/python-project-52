@@ -43,11 +43,13 @@ test-verbose:
 	uv run pytest --ds=task_manager.settings --reuse-db -v
 
 test-coverage:
-	uv run pytest --ds=task_manager.settings --reuse-db --cov=task_manager --cov-report=term --cov-report=html
+	uv run pytest --ds=task_manager.settings --reuse-db --cov=task_manager --cov-report=term --cov-report=xml
 
 run:
 	uv run gunicorn -w 5 -b 0.0.0.0:$(PORT) task_manager.wsgi:application
-
+coverage:
+	uv run coverage run --omit='*/migrations/*,*/settings.py,*/venv/*,*/.venv/*' -m pytest -p no:dotenv --ds=task_manager.settings
+	uv run coverage report --show-missing --skip-covered
 sonar:
 	/opt/sonar-scanner/bin/sonar-scanner \
 		-Dsonar.projectKey=python-project-52 \
