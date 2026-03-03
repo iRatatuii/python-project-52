@@ -17,8 +17,8 @@ ERROR_CANNOT_DELETE_STATUS = (
 ERROR_CANNOT_DELETE_LABEL = (
     "Невозможно удалить метку, потому что она используется в задачах"
 )
-ERROR_TASK_DELETE_RIGHTS = "Задачу может удалить только её автор"
-ERROR_TASK_EDIT_RIGHTS = "Задачу может редактировать только её автор"
+ERROR_TASK_DELETE_RIGHTS = "Задачу может удалить только ее автор"
+ERROR_TASK_EDIT_RIGHTS = "Задачу может редактировать только ее автор"
 ERROR_INVALID_CREDENTIALS = "Неверное имя пользователя или пароль"
 ERROR_NAME_REQUIRED = "Имя обязательно"
 ERROR_STATUS_REQUIRED = "Статус обязателен"
