@@ -26,10 +26,12 @@ jobs:
           --health-retries 5
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      with:
+        fetch-depth: 0
     
     - name: Install uv
-      uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf
+      uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf  # v3
     
     - name: Set up Python
       run: uv python install 3.10
@@ -49,20 +51,11 @@ jobs:
     - name: Run tests with coverage
       run: uv run pytest --ds=task_manager.settings --cov=task_manager --cov-report=xml --cov-report=term
       
-    - name: Upload coverage to SonarCloud
-      uses: sonarsource/sonarcloud-github-action@ba3875ecf642b2129de2b589510c81a8b53dbf4e
+    - name: SonarCloud Scan
+      uses: sonarsource/sonarcloud-github-action@ba3875ecf642b2129de2b589510c81a8b53dbf4e  # v4.0.0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      if: env.SONAR_TOKEN != null
-      
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@ab904c41d6ece82784817410c45d8b8c02684457
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-      if: false  
 
   deploy:
     needs: test
@@ -70,11 +63,11 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
     
     - name: Deploy to Render
-      uses: johnbeynon/render-deploy-action@a0588f9aca995a15d69a72cb2bfbf37c12e5b540
+      uses: johnbeynon/render-deploy-action@a0588f9aca995a15d69a72cb2bfbf37c12e5b540  # v0.0.8
       with:
         service-id: ${{ secrets.RENDER_SERVICE_ID }}
         api-key: ${{ secrets.RENDER_API_KEY }}
-      if: false  
+      if: false
