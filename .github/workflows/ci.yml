@@ -52,12 +52,10 @@ jobs:
       run: uv run pytest --ds=task_manager.settings --cov=task_manager --cov-report=xml --cov-report=term
       
     - name: SonarCloud Scan
-      uses: sonarsource/sonarqube-scan-action@v6
+      uses: SonarSource/sonarqube-scan-action@v6
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_PROJECT_KEY: iRatatuii_python-project-52
-        SONAR_ORGANIZATION: iratatuii
 
   deploy:
     needs: test
