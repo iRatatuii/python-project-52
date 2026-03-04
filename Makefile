@@ -47,9 +47,9 @@ run:
 
 sonar:
 	/opt/sonar-scanner/bin/sonar-scanner \
-		-Dsonar.projectKey=python-project-52 \
+		-Dsonar.projectKey=iRatatuii_python-project-52 \
 		-Dsonar.organization=iratatuii \
 		-Dsonar.host.url=https://sonarcloud.io \
-		-Dsonar.login=$(shell grep SONAR_TOKEN .env | cut -d '=' -f2)
+		-Dsonar.login=$(shell grep SONAR_TOKEN .env | cut -d '=' -f2) \
 		-Dsonar.python.coverage.reportPaths=coverage.xml
 
